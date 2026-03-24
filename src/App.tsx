@@ -8,16 +8,21 @@ import { ResumenMensual } from './components/ResumenMensual';
 import { Dashboard } from './components/Dashboard';
 import { GestionAusencias } from './components/GestionAusencias';
 import { LoginPage } from './pages/LoginPage';
+import { AdminPage } from './pages/AdminPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuth } from './hooks/useAuth';
+import { useUser } from './hooks/useUser';
 
 function DashboardLayout() {
   const [modulo, setModulo] = useState<Modulo>('operarios');
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const { userData } = useUser(user?.uid || null);
 
   const handleLogout = async () => {
     await logout();
   };
+
+  const isAdmin = userData?.rol === 'director';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,6 +91,18 @@ function DashboardLayout() {
               >
                 Ausencias
               </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setModulo('admin' as Modulo)}
+                  className={`px-4 py-3 font-medium transition-colors ${
+                    modulo === 'admin'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Admin
+                </button>
+              )}
             </div>
             <button
               onClick={handleLogout}
@@ -105,6 +122,7 @@ function DashboardLayout() {
         {modulo === 'resumen' && <ResumenMensual />}
         {modulo === 'dashboard' && <Dashboard />}
         {modulo === 'ausencias' && <GestionAusencias />}
+        {modulo === 'admin' && isAdmin && <AdminPage />}
       </main>
     </div>
   );
@@ -120,6 +138,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardLayout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
             </ProtectedRoute>
           }
         />

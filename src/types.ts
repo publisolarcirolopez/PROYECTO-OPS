@@ -39,4 +39,4 @@ export interface Ausencia {
   nota?: string;
 }
 
-export type Modulo = 'operarios' | 'obras' | 'calendario' | 'resumen' | 'dashboard' | 'ausencias';
+export type Modulo = 'operarios' | 'obras' | 'calendario' | 'resumen' | 'dashboard' | 'ausencias' | 'admin';
