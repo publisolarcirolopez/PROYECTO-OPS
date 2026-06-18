@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Operario, Obra, CeldaCalendario, EstadoCelda, Festivo } from '../types';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirestoreState } from '../hooks/useFirestoreState';
 import { esFestivo, esFinDeSemana } from '../utils/capacidad';
 
 const ESTADOS: EstadoCelda[] = ['trabaja', 'vacaciones', 'baja', 'festivo', 'permiso', 'libre'];
@@ -285,10 +285,10 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
 }
 
 export function Calendario() {
-  const [operarios] = useLocalStorage<Operario[]>('operarios', []);
-  const [obras] = useLocalStorage<Obra[]>('obras', []);
-  const [celdas, setCeldas] = useLocalStorage<CeldaCalendario[]>('calendario', []);
-  const [festivos] = useLocalStorage<Festivo[]>('festivos', []);
+  const [operarios] = useFirestoreState<Operario[]>('operarios', []);
+  const [obras] = useFirestoreState<Obra[]>('obras', []);
+  const [celdas, setCeldas] = useFirestoreState<CeldaCalendario[]>('calendario', []);
+  const [festivos] = useFirestoreState<Festivo[]>('festivos', []);
 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());

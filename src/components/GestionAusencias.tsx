@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirestoreState } from '../hooks/useFirestoreState';
 import { Operario, Festivo, Ausencia } from '../types';
 
 const TIPOS_AUSENCIA: Ausencia['tipo'][] = ['vacaciones', 'baja', 'permiso'];
@@ -21,9 +21,9 @@ function generarId(): string {
 }
 
 export function GestionAusencias() {
-  const [operarios] = useLocalStorage<Operario[]>('operarios', []);
-  const [festivos, setFestivos] = useLocalStorage<Festivo[]>('festivos', []);
-  const [ausencias, setAusencias] = useLocalStorage<Ausencia[]>('ausencias', []);
+  const [operarios] = useFirestoreState<Operario[]>('operarios', []);
+  const [festivos, setFestivos] = useFirestoreState<Festivo[]>('festivos', []);
+  const [ausencias, setAusencias] = useFirestoreState<Ausencia[]>('ausencias', []);
 
   const [tab, setTab] = useState<'festivos' | 'ausencias'>('festivos');
 

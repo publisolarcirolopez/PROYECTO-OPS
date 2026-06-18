@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirestoreState } from '../hooks/useFirestoreState';
 import { Operario, Obra, CeldaCalendario } from '../types';
 
 const MESES = [
@@ -8,9 +8,9 @@ const MESES = [
 ];
 
 export function ResumenMensual() {
-  const [operarios] = useLocalStorage<Operario[]>('operarios', []);
-  const [obras] = useLocalStorage<Obra[]>('obras', []);
-  const [calendario] = useLocalStorage<CeldaCalendario[]>('calendario', []);
+  const [operarios] = useFirestoreState<Operario[]>('operarios', []);
+  const [obras] = useFirestoreState<Obra[]>('obras', []);
+  const [calendario] = useFirestoreState<CeldaCalendario[]>('calendario', []);
 
   const hoy = new Date();
   const [anio, setAnio] = useState(hoy.getFullYear());

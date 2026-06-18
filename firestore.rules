@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Reglas de seguridad de Firestore del proyecto Firebase publisolar-ops.
+// IMPORTANTE: este proyecto Firebase esta COMPARTIDO con "Gestor de Monos FORESVI".
+// Este archivo refleja el estado completo de las reglas vivas en la consola,
+// no solo las de este repo, para que ningun despliegue las machaque.
+// Pegar tal cual en: Firebase Console -> Firestore Database -> Reglas -> Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // PROYECTO X (PROYECTO-OPS) - appData: operarios, obras, calendario, festivos, ausencias.
+    // Un documento por "tabla" con campo `value` = array. Cualquier autenticado lee/escribe.
+    match /appData/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // PROYECTO X (PROYECTO-OPS) - users: roles (instalador / jefe_produccion / director).
+    // Alta desde el panel Admin (AdminPage.tsx). Mas adelante se puede restringir el write a director.
+    match /users/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Gestor de Monos FORESVI - colección de otro proyecto que comparte este Firebase.
+    // No se gestiona desde este repo; se replica aqui para no romperlo al republicar.
+    match /gestorMonos/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

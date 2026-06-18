@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Obra } from '../types';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirestoreState } from '../hooks/useFirestoreState';
 
 export function Obras() {
-  const [obras, setObras] = useLocalStorage<Obra[]>('obras', []);
+  const [obras, setObras] = useFirestoreState<Obra[]>('obras', []);
   const [editando, setEditando] = useState<string | null>(null);
   const [formData, setFormData] = useState({ obraCodigo: '', nombre: '', importeTotal: 0 });
 

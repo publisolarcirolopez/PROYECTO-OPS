@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirestoreState } from '../hooks/useFirestoreState';
 import { Operario, Obra, CeldaCalendario, Festivo, Ausencia } from '../types';
 import { calcularCapacidadMes } from '../utils/capacidad';
 import {
@@ -13,11 +13,11 @@ const MESES = [
 ];
 
 export function Dashboard() {
-  const [operarios] = useLocalStorage<Operario[]>('operarios', []);
-  const [obras] = useLocalStorage<Obra[]>('obras', []);
-  const [calendario] = useLocalStorage<CeldaCalendario[]>('calendario', []);
-  const [festivos] = useLocalStorage<Festivo[]>('festivos', []);
-  const [ausencias] = useLocalStorage<Ausencia[]>('ausencias', []);
+  const [operarios] = useFirestoreState<Operario[]>('operarios', []);
+  const [obras] = useFirestoreState<Obra[]>('obras', []);
+  const [calendario] = useFirestoreState<CeldaCalendario[]>('calendario', []);
+  const [festivos] = useFirestoreState<Festivo[]>('festivos', []);
+  const [ausencias] = useFirestoreState<Ausencia[]>('ausencias', []);
 
   const hoy = new Date();
   const [anio, setAnio] = useState(hoy.getFullYear());

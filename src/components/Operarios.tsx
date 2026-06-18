@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Operario } from '../types';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirestoreState } from '../hooks/useFirestoreState';
 
 export function Operarios() {
-  const [operarios, setOperarios] = useLocalStorage<Operario[]>('operarios', []);
+  const [operarios, setOperarios] = useFirestoreState<Operario[]>('operarios', []);
   const [nuevoNombre, setNuevoNombre] = useState('');
 
   const agregarOperario = () => {
