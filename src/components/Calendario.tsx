@@ -49,7 +49,13 @@ function getLunesDeSemana(fecha: Date): Date {
 }
 
 function formatFecha(d: Date): string {
-  return d.toISOString().split('T')[0];
+  // Formateo en fecha LOCAL. Antes se usaba toISOString(), que convierte a UTC
+  // y en husos al este de Greenwich (España UTC+1/+2) devolvía el día anterior,
+  // desplazando el guardado/consulta de cada celda -1 día.
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function agregarDias(fecha: Date, dias: number): Date {
@@ -125,6 +131,13 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
   }, [obras, searchTerm]);
 
   if (!celda) return null;
+
+  // La celda ya tiene datos persistidos (no es una celda nueva vacía)
+  const celdaTieneDatos =
+    (!!celda.estado && celda.estado !== 'libre') ||
+    (!!celda.obrasCodigos && celda.obrasCodigos.length > 0) ||
+    !!celda.obraCodigo ||
+    !!celda.nota;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -264,7 +277,7 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
           >
             Guardar
           </button>
-          {celda.estado && (
+          {celdaTieneDatos && (
             <button
               onClick={onDelete}
               className="bg-red-100 text-red-600 px-4 py-2 rounded hover:bg-red-200"
@@ -432,8 +445,11 @@ export function Calendario() {
 
                     const listaObras = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
                     let bgClass = COLORES[estado];
-                    if (estado === 'trabaja' && listaObras.length > 0) {
+                    if (estado === 'trabaja' && listaObras.length === 1) {
                       bgClass = getColorObra(listaObras[0]);
+                    } else if (estado === 'trabaja' && listaObras.length > 1) {
+                      // Varias obras el mismo día: color neutro; los códigos ya se listan debajo
+                      bgClass = 'bg-slate-200 hover:bg-slate-300';
                     }
                     // Fin de semana sin datos registrados: fondo gris suave
                     if (esFDS && estado === 'libre') {

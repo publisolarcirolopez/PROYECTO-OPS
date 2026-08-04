@@ -60,20 +60,37 @@ export function Dashboard() {
     return mapa;
   }, [celdasDelMes, obras]);
 
+  // Participaciones GLOBALES por obra (todo el calendario, no solo el mes),
+  // para repartir el importe entre TODO el trabajo de la obra y no contarlo
+  // entero en cada mes con actividad.
+  const participacionesGlobalesPorObra = useMemo(() => {
+    const mapa = new Map<string, number>();
+    calendario.forEach(celda => {
+      if (celda.estado !== 'trabaja') return;
+      const lsOb = celda.obrasCodigos || (celda.obraCodigo ? [celda.obraCodigo] : []);
+      const val = lsOb.filter(codigo => obras.some(o => o.obraCodigo === codigo));
+      if (val.length === 0) return;
+      const fraccion = 1 / val.length;
+      val.forEach(codigo => mapa.set(codigo, (mapa.get(codigo) || 0) + fraccion));
+    });
+    return mapa;
+  }, [calendario, obras]);
+
   const datosObras = useMemo(() => {
     return obras
       .filter(obra => participacionesPorObra.has(obra.obraCodigo))
       .map(obra => {
         const parts = participacionesPorObra.get(obra.obraCodigo) || [];
         const numPart = parts.reduce((sum, p) => sum + p.fraccion, 0);
+        const numPartGlobal = participacionesGlobalesPorObra.get(obra.obraCodigo) || numPart;
         return {
           obraCodigo: obra.obraCodigo,
           importeTotal: obra.importeTotal,
           numParticipaciones: numPart,
-          valorPorParticipacion: numPart > 0 ? obra.importeTotal / numPart : 0
+          valorPorParticipacion: numPartGlobal > 0 ? obra.importeTotal / numPartGlobal : 0
         };
       });
-  }, [obras, participacionesPorObra]);
+  }, [obras, participacionesPorObra, participacionesGlobalesPorObra]);
 
   const diasDelMesUnicos = useMemo(() => {
     const s = new Set<string>();
@@ -83,18 +100,22 @@ export function Dashboard() {
 
   // KPIs Principales
   const kpis = useMemo(() => {
+    // Producción del mes = porción del importe correspondiente al trabajo de este mes
+    // (valorPorParticipacion ya usa el denominador global para no doble-contar entre meses).
     let produccionTotal = 0;
     datosObras.forEach(o => {
-      if (o.numParticipaciones > 0) produccionTotal += o.importeTotal;
+      produccionTotal += o.numParticipaciones * o.valorPorParticipacion;
     });
     let equiposDia = 0;
     const prodDiariaMap = new Map<string, number>();
 
     celdasDelMes.forEach(c => {
-      if (c.estado === 'trabaja') {
-        equiposDia += 1 / 3; // Estimación simple (1 op = 1/3 equipo-dia si equipos son de ~3)
-        // O más exacto, sumamos las fracciones de obras de cada día para la producción diaria
-      }
+      if (c.estado !== 'trabaja') return;
+      // Solo cuenta como equipo-día si tiene al menos una obra válida (coherente
+      // con la tabla "Equipos Eficientes").
+      const lsOb = c.obrasCodigos || (c.obraCodigo ? [c.obraCodigo] : []);
+      const tieneObraValida = lsOb.some(codigo => obras.some(o => o.obraCodigo === codigo));
+      if (tieneObraValida) equiposDia += 1 / 3; // Estimación: 1 operario ≈ 1/3 equipo-día
     });
 
     // Producción diaria exacta
@@ -115,7 +136,9 @@ export function Dashboard() {
 
     const numObras = datosObras.filter(o => o.numParticipaciones > 0).length;
     const arrProds = Array.from(prodDiariaMap.values());
-    const prodMediaDia = arrProds.length > 0 ? produccionTotal / arrProds.length : 0;
+    // Media por día CON producción (no diluye con días sin actividad ni finde/festivo)
+    const diasConProduccion = arrProds.filter(p => p > 0).length;
+    const prodMediaDia = diasConProduccion > 0 ? produccionTotal / diasConProduccion : 0;
     const prodMediaTech = operariosActivos.length > 0 ? produccionTotal / operariosActivos.length : 0;
 
     // ----- Bloque de Control Global Empresa -----
@@ -184,7 +207,7 @@ export function Dashboard() {
         mediaDiariaRequerida,
       }
     };
-  }, [datosObras, celdasDelMes, diasDelMesUnicos, operariosActivos, capacidad, festivos]);
+  }, [datosObras, celdasDelMes, diasDelMesUnicos, operariosActivos, capacidad, festivos, obras]);
 
   // Datos Operarios
   const statsOperarios = useMemo(() => {

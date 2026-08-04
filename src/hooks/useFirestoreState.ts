@@ -36,7 +36,9 @@ export function useFirestoreState<T>(
         if (!tieneContenido) return;
         valueRef.current = parsed;
         setValue(parsed);
-        setDoc(ref, { value: parsed });
+        setDoc(ref, { value: parsed }).catch((err) => {
+          console.error(`[useFirestoreState] Error migrando "${key}" a Firestore:`, err);
+        });
       } catch {
         /* localStorage corrupto o inaccesible: ignorar */
       }
@@ -49,7 +51,9 @@ export function useFirestoreState<T>(
     const resolved = next instanceof Function ? next(valueRef.current) : next;
     valueRef.current = resolved;
     setValue(resolved);
-    setDoc(doc(db, COLLECTION, key), { value: resolved });
+    setDoc(doc(db, COLLECTION, key), { value: resolved }).catch((err) => {
+      console.error(`[useFirestoreState] Error guardando "${key}" en Firestore:`, err);
+    });
   };
 
   return [value, update];

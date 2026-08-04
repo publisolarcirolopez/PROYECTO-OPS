@@ -7,6 +7,10 @@ const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+// Formatea un número de participaciones (fraccionadas) sin decimales feos.
+const fmtPart = (n: number) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
 export function ResumenMensual() {
   const [operarios] = useFirestoreState<Operario[]>('operarios', []);
   const [obras] = useFirestoreState<Obra[]>('obras', []);
@@ -59,6 +63,26 @@ export function ResumenMensual() {
     return mapa;
   }, [celdasDelMes, obras, operarios]);
 
+  // Participaciones GLOBALES por obra (todo el calendario, no solo el mes).
+  // El valor por participación se reparte sobre el total de trabajo de la obra
+  // para que su importe NO se cuente entero en cada mes que tuvo actividad.
+  const participacionesGlobalesPorObra = useMemo(() => {
+    const mapa = new Map<string, number>();
+    calendario.forEach(celda => {
+      if (celda.estado !== 'trabaja') return;
+      const operarioActivo = operarios.some(o => o.id === celda.operarioId && o.activo);
+      if (!operarioActivo) return;
+      const listaObras = celda.obrasCodigos || (celda.obraCodigo ? [celda.obraCodigo] : []);
+      const obrasValidas = listaObras.filter(codigo => obras.some(o => o.obraCodigo === codigo));
+      if (obrasValidas.length === 0) return;
+      const fraccion = 1 / obrasValidas.length;
+      obrasValidas.forEach(codigo => {
+        mapa.set(codigo, (mapa.get(codigo) || 0) + fraccion);
+      });
+    });
+    return mapa;
+  }, [calendario, obras, operarios]);
+
   // Calcular valor por participación para cada obra
   const datosObras = useMemo(() => {
     return obras
@@ -69,10 +93,13 @@ export function ResumenMensual() {
       .map(obra => {
         const participaciones = participacionesPorObra.get(obra.obraCodigo) || [];
         const numParticipaciones = participaciones.reduce((sum, p) => sum + p.fraccion, 0);
-        const valorPorParticipacion = numParticipaciones > 0 
-          ? obra.importeTotal / numParticipaciones 
+        // Denominador GLOBAL: reparte el importe entre TODAS las participaciones
+        // de la obra (todos los meses), evitando el doble conteo entre meses.
+        const participacionesGlobales = participacionesGlobalesPorObra.get(obra.obraCodigo) || numParticipaciones;
+        const valorPorParticipacion = participacionesGlobales > 0
+          ? obra.importeTotal / participacionesGlobales
           : 0;
-        
+
         return {
           obraCodigo: obra.obraCodigo,
           nombre: obra.nombre || '-',
@@ -81,7 +108,7 @@ export function ResumenMensual() {
           valorPorParticipacion
         };
       });
-  }, [obras, participacionesPorObra]);
+  }, [obras, participacionesPorObra, participacionesGlobalesPorObra]);
 
   // Resumen por operario
   const datosOperarios = useMemo(() => {
@@ -368,7 +395,7 @@ export function ResumenMensual() {
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-emerald-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Participaciones Totales</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
-            {resumenTotales.participacionesTotales}
+            {fmtPart(resumenTotales.participacionesTotales)}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
@@ -414,7 +441,7 @@ export function ResumenMensual() {
                       <td className="px-4 py-3 text-right text-blue-600 font-bold">
                         {op.facturacion.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-600">{op.participaciones}</td>
+                      <td className="px-4 py-3 text-right text-gray-600">{fmtPart(op.participaciones)}</td>
                       <td className="px-4 py-3 text-right text-gray-800">
                         {media.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </td>
@@ -533,7 +560,7 @@ export function ResumenMensual() {
                 datosOperarios.map(op => (
                   <tr key={op.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3 text-gray-800">{op.nombre}</td>
-                    <td className="px-4 py-3 text-right text-gray-600">{op.participaciones}</td>
+                    <td className="px-4 py-3 text-right text-gray-600">{fmtPart(op.participaciones)}</td>
                     <td className="px-4 py-3 text-right text-gray-800 font-medium">
                       {op.facturacion.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                     </td>
@@ -576,7 +603,7 @@ export function ResumenMensual() {
                     <td className="px-4 py-3 text-right text-gray-800">
                       {obra.importeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">{obra.numParticipaciones}</td>
+                    <td className="px-4 py-3 text-right text-gray-600">{fmtPart(obra.numParticipaciones)}</td>
                     <td className="px-4 py-3 text-right text-gray-800 font-medium">
                       {obra.valorPorParticipacion.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                     </td>
