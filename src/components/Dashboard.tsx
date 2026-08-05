@@ -312,16 +312,13 @@ export function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Dashboard Operativo</h2>
-        <div className="flex gap-4">
-          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} className="border rounded px-3 py-2">
-            {[anio - 1, anio, anio + 1].map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="border rounded px-3 py-2">
-            {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
-          </select>
-        </div>
+      <div className="flex justify-end items-center gap-3">
+        <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+          {[anio - 1, anio, anio + 1].map(a => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white capitalize">
+          {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+        </select>
       </div>
 
       {/* Control Global Empresa */}

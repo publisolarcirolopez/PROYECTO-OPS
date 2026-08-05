@@ -386,8 +386,6 @@ export function ResumenMensual() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Resumen</h2>
-
       {/* Selectores */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex gap-4 flex-wrap items-end">

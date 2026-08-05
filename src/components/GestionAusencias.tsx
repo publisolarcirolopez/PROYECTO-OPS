@@ -123,8 +123,6 @@ export function GestionAusencias() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestión de Ausencias y Festivos</h2>
-
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b">
         <button

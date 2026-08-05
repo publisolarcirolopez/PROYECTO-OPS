@@ -19,4 +19,60 @@
   --color-gold-600: #e0900c;
 
   --color-charcoal: #3c3c3b;
+  --color-ink: #2b2b28;
+
+  --font-sans: 'Montserrat', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f4f5f3;
+  color: #2b2b28;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Componentes reutilizables (look CRM) ===== */
+@layer components {
+  /* Tarjeta / panel */
+  .crm-card {
+    @apply bg-white rounded-2xl border border-gray-200/70 shadow-sm;
+  }
+
+  /* Cabecera de sección dentro de una tarjeta */
+  .crm-card-header {
+    @apply px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3;
+  }
+
+  /* Tabla con estética CRM: cabecera suave, filas con hover, aire */
+  .crm-table {
+    @apply w-full text-sm;
+  }
+  .crm-table thead th {
+    @apply px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 bg-gray-50/70 border-b border-gray-100;
+  }
+  .crm-table tbody td {
+    @apply px-5 py-3.5 text-gray-700 border-b border-gray-50 align-middle;
+  }
+  .crm-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .crm-table tbody tr {
+    @apply transition-colors;
+  }
+  .crm-table tbody tr:hover {
+    @apply bg-brand-50/50;
+  }
+
+  /* Badge / pill de estado */
+  .crm-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  /* Botón primario de marca */
+  .crm-btn {
+    @apply inline-flex items-center gap-2 bg-brand-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50;
+  }
+  .crm-btn-ghost {
+    @apply inline-flex items-center gap-2 text-gray-600 font-medium px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors;
+  }
 }

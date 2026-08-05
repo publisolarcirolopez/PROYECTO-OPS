@@ -97,110 +97,96 @@ export function Obras() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Obras</h2>
-
       {/* Formulario */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        <input
-          type="text"
-          placeholder="Código obra"
-          value={formData.obraCodigo}
-          onChange={e => setFormData({ ...formData, obraCodigo: e.target.value })}
-          className="border px-3 py-2 rounded w-40"
-        />
-        <input
-          type="text"
-          placeholder="Nombre (opcional)"
-          value={formData.nombre}
-          onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-          className="border px-3 py-2 rounded flex-1 min-w-48"
-        />
-        <input
-          type="number"
-          placeholder="Importe"
-          value={formData.importeTotal || ''}
-          onChange={e => setFormData({ ...formData, importeTotal: Number(e.target.value) })}
-          className="border px-3 py-2 rounded w-32"
-        />
-        {editando ? (
-          <>
-            <button
-              onClick={guardarEdicion}
-              className="bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600"
-            >
-              Guardar
-            </button>
-            <button
-              onClick={resetForm}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-            >
-              Cancelar
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={agregarObra}
-            className="bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600"
-          >
-            Añadir
-          </button>
+      <div className="crm-card p-4 mb-6">
+        <div className="flex gap-2 flex-wrap items-center">
+          <input
+            type="text"
+            placeholder="Código obra"
+            value={formData.obraCodigo}
+            onChange={e => setFormData({ ...formData, obraCodigo: e.target.value })}
+            className="border border-gray-300 px-3 py-2 rounded-lg w-40 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+          />
+          <input
+            type="text"
+            placeholder="Nombre (opcional)"
+            value={formData.nombre}
+            onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+            className="border border-gray-300 px-3 py-2 rounded-lg flex-1 min-w-48 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+          />
+          <input
+            type="number"
+            placeholder="Importe"
+            value={formData.importeTotal || ''}
+            onChange={e => setFormData({ ...formData, importeTotal: Number(e.target.value) })}
+            className="border border-gray-300 px-3 py-2 rounded-lg w-32 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+          />
+          {editando ? (
+            <>
+              <button onClick={guardarEdicion} className="crm-btn">Guardar</button>
+              <button onClick={resetForm} className="crm-btn-ghost">Cancelar</button>
+            </>
+          ) : (
+            <button onClick={agregarObra} className="crm-btn">Añadir</button>
+          )}
+        </div>
+        {aviso && (
+          <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm mt-3">
+            {aviso}
+          </p>
         )}
       </div>
 
-      {aviso && (
-        <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm mb-6">
-          {aviso}
-        </p>
-      )}
-
       {/* Lista */}
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border px-3 py-2 text-left">Código</th>
-            <th className="border px-3 py-2 text-left">Nombre</th>
-            <th className="border px-3 py-2 text-right">Importe</th>
-            <th className="border px-3 py-2 text-center">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {obras.map(obra => {
-            const isActiva = obra.activa !== false;
-            return (
-            <tr key={obra.obraCodigo} className={!isActiva ? 'opacity-50 bg-gray-50' : ''}>
-              <td className="border px-3 py-2 font-mono">
-                {obra.obraCodigo}
-                {!isActiva && <span className="ml-2 text-xs text-red-500 font-bold">(Inactiva)</span>}
-              </td>
-              <td className="border px-3 py-2">{obra.nombre || '-'}</td>
-              <td className="border px-3 py-2 text-right">
-                {obra.importeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-              </td>
-              <td className="border px-3 py-2 text-center">
-                <button
-                  onClick={() => iniciarEdicion(obra)}
-                  className="text-brand-600 hover:underline mr-4"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => toggleActiva(obra.obraCodigo)}
-                  className={isActiva ? "text-red-600 hover:underline" : "text-green-600 hover:underline"}
-                >
-                  {isActiva ? 'Eliminar' : 'Restaurar'}
-                </button>
-              </td>
-            </tr>
-          )})}
-          {obras.length === 0 && (
-            <tr>
-              <td colSpan={4} className="border px-3 py-4 text-center text-gray-400">
-                No hay obras
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <div className="crm-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="crm-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th className="text-right">Importe</th>
+                <th className="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {obras.map(obra => {
+                const isActiva = obra.activa !== false;
+                return (
+                  <tr key={obra.obraCodigo} className={!isActiva ? 'opacity-60' : ''}>
+                    <td className="font-mono text-charcoal">
+                      {obra.obraCodigo}
+                      {!isActiva && (
+                        <span className="crm-badge bg-gray-100 text-gray-500 ml-2">Inactiva</span>
+                      )}
+                    </td>
+                    <td className="text-gray-600">{obra.nombre || '—'}</td>
+                    <td className="text-right font-semibold text-charcoal">
+                      {obra.importeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </td>
+                    <td className="text-right whitespace-nowrap">
+                      <button onClick={() => iniciarEdicion(obra)} className="text-brand-600 hover:text-brand-700 font-medium mr-4">
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => toggleActiva(obra.obraCodigo)}
+                        className={isActiva ? 'text-red-500 hover:text-red-700 font-medium' : 'text-brand-600 hover:text-brand-700 font-medium'}
+                      >
+                        {isActiva ? 'Eliminar' : 'Restaurar'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {obras.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="text-center text-gray-400 py-8">No hay obras</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

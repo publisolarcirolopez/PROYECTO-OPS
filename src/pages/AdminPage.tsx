@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, firebaseConfig } from '@/config/firebase';
 import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
-import { Logo } from '@/components/Logo';
 
 // Colecciones de datos de negocio que se pueden vaciar desde la Zona de datos.
 const COLECCIONES_DATOS: { key: string; label: string }[] = [
@@ -14,6 +11,9 @@ const COLECCIONES_DATOS: { key: string; label: string }[] = [
   { key: 'calendario', label: 'Calendario (producción)' },
   { key: 'ausencias', label: 'Ausencias' },
 ];
+
+const inputCls =
+  'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400';
 
 export const AdminPage = () => {
   const [email, setEmail] = useState('');
@@ -24,8 +24,6 @@ export const AdminPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [datosMsg, setDatosMsg] = useState('');
-  const { logout } = useAuth();
-  const navigate = useNavigate();
 
   // Vacía una colección de appData (deja value: []). Pide confirmación.
   const vaciarColeccion = async (key: string, label: string) => {
@@ -72,7 +70,6 @@ export const AdminPage = () => {
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
       const uid = userCredential.user.uid;
 
-      // Guardar datos en Firestore (con la app principal, ya autenticada como director)
       await addDoc(collection(db, 'users'), {
         uid,
         email,
@@ -89,110 +86,65 @@ export const AdminPage = () => {
     } catch (err: any) {
       setError(err.message);
     } finally {
-      // Cerrar y desechar la app secundaria pase lo que pase.
       await signOut(secondaryAuth).catch(() => {});
       await deleteApp(secondaryApp).catch(() => {});
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-gold-500" />
-      <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Logo size={34} />
-          <span className="text-gray-300">|</span>
-          <h1 className="text-lg font-bold text-charcoal">Panel de Administración</h1>
+    <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl">
+      {/* Crear usuario */}
+      <div className="crm-card overflow-hidden self-start">
+        <div className="crm-card-header">
+          <h2 className="font-semibold text-charcoal">Crear nuevo usuario</h2>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-md transition-colors"
-        >
-          Cerrar sesión
-        </button>
-      </nav>
-
-      <div className="p-8 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Crear Nuevo Usuario</h2>
-
-        <form onSubmit={handleCreateUser} className="bg-white p-6 rounded-lg shadow">
-          <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-              required
-            />
+        <form onSubmit={handleCreateUser} className="p-5 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputCls} required />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">Nombre</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-              required
-            />
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Nombre</label>
+            <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} className={inputCls} required />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-              required
-            />
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className={inputCls} required />
           </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 font-bold mb-2">Rol</label>
-            <select
-              value={rol}
-              onChange={(e) => setRol(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-            >
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Rol</label>
+            <select value={rol} onChange={e => setRol(e.target.value)} className={inputCls}>
               <option value="instalador">Instalador</option>
               <option value="jefe_produccion">Jefe de Producción</option>
               <option value="director">Director de Operaciones</option>
             </select>
           </div>
 
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          {success && <p className="text-green-500 text-sm mb-4">{success}</p>}
+          {error && <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded px-3 py-2">{error}</p>}
+          {success && <p className="text-brand-700 text-sm bg-brand-50 border border-brand-100 rounded px-3 py-2">{success}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-brand-500 text-white font-semibold py-2 rounded-lg hover:bg-brand-600 transition-colors disabled:bg-gray-400"
-          >
-            {loading ? 'Creando...' : 'Crear Usuario'}
+          <button type="submit" disabled={loading} className="crm-btn w-full justify-center">
+            {loading ? 'Creando…' : 'Crear usuario'}
           </button>
         </form>
+      </div>
 
-        {/* Zona de datos (borrado) */}
-        <div className="mt-10 bg-white p-6 rounded-lg shadow border border-red-200">
-          <h2 className="text-lg font-bold text-red-700 flex items-center gap-2 mb-1">
+      {/* Zona de datos */}
+      <div className="crm-card overflow-hidden self-start border-red-200">
+        <div className="crm-card-header border-red-100">
+          <h2 className="font-semibold text-red-700 flex items-center gap-2">
             <span>⚠️</span> Zona de datos
           </h2>
+        </div>
+        <div className="p-5">
           <p className="text-sm text-gray-500 mb-4">
-            Vacía los datos de negocio para empezar de cero. Estas acciones son
-            permanentes y no se pueden deshacer.
+            Vacía los datos de negocio para empezar de cero. Estas acciones son permanentes y no se pueden deshacer.
           </p>
 
-          <div className="space-y-2">
+          <div className="divide-y divide-gray-100">
             {COLECCIONES_DATOS.map(c => (
-              <div key={c.key} className="flex items-center justify-between border-b border-gray-100 pb-2">
+              <div key={c.key} className="flex items-center justify-between py-2.5">
                 <span className="text-sm text-charcoal">{c.label}</span>
                 <button
                   onClick={() => vaciarColeccion(c.key, c.label)}
@@ -212,9 +164,7 @@ export const AdminPage = () => {
           </button>
 
           {datosMsg && (
-            <p className="text-sm mt-4 text-gray-700 bg-gray-50 border rounded px-3 py-2">
-              {datosMsg}
-            </p>
+            <p className="text-sm mt-4 text-gray-700 bg-gray-50 border rounded-lg px-3 py-2">{datosMsg}</p>
           )}
         </div>
       </div>

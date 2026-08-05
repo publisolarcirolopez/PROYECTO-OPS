@@ -350,8 +350,6 @@ export function Calendario() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Calendario Operativo</h2>
-
       {/* Controles */}
       <div className="flex gap-4 mb-6 items-center flex-wrap">
         <select
