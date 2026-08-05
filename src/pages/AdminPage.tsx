@@ -4,8 +4,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, firebaseConfig } from '@/config/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { Logo } from '@/components/Logo';
+
+// Colecciones de datos de negocio que se pueden vaciar desde la Zona de datos.
+const COLECCIONES_DATOS: { key: string; label: string }[] = [
+  { key: 'operarios', label: 'Montadores' },
+  { key: 'obras', label: 'Obras' },
+  { key: 'calendario', label: 'Calendario (producción)' },
+  { key: 'ausencias', label: 'Ausencias' },
+];
 
 export const AdminPage = () => {
   const [email, setEmail] = useState('');
@@ -15,8 +23,38 @@ export const AdminPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [datosMsg, setDatosMsg] = useState('');
   const { logout } = useAuth();
   const navigate = useNavigate();
+
+  // Vacía una colección de appData (deja value: []). Pide confirmación.
+  const vaciarColeccion = async (key: string, label: string) => {
+    if (!window.confirm(`¿Vaciar "${label}"? Esta acción borra todos los registros y NO se puede deshacer.`)) {
+      return;
+    }
+    setDatosMsg('');
+    try {
+      await setDoc(doc(db, 'appData', key), { value: [] });
+      setDatosMsg(`"${label}" vaciado correctamente.`);
+    } catch (err: any) {
+      setDatosMsg(`Error al vaciar "${label}": ${err?.message || err}`);
+    }
+  };
+
+  const vaciarTodo = async () => {
+    if (!window.confirm('¿Empezar de cero? Se borrarán montadores, obras, calendario y ausencias. NO se puede deshacer.')) {
+      return;
+    }
+    setDatosMsg('');
+    try {
+      for (const c of COLECCIONES_DATOS) {
+        await setDoc(doc(db, 'appData', c.key), { value: [] });
+      }
+      setDatosMsg('Todos los datos de negocio se han vaciado. Ya puedes empezar a cargar la producción actual.');
+    } catch (err: any) {
+      setDatosMsg(`Error al vaciar los datos: ${err?.message || err}`);
+    }
+  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +179,44 @@ export const AdminPage = () => {
             {loading ? 'Creando...' : 'Crear Usuario'}
           </button>
         </form>
+
+        {/* Zona de datos (borrado) */}
+        <div className="mt-10 bg-white p-6 rounded-lg shadow border border-red-200">
+          <h2 className="text-lg font-bold text-red-700 flex items-center gap-2 mb-1">
+            <span>⚠️</span> Zona de datos
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Vacía los datos de negocio para empezar de cero. Estas acciones son
+            permanentes y no se pueden deshacer.
+          </p>
+
+          <div className="space-y-2">
+            {COLECCIONES_DATOS.map(c => (
+              <div key={c.key} className="flex items-center justify-between border-b border-gray-100 pb-2">
+                <span className="text-sm text-charcoal">{c.label}</span>
+                <button
+                  onClick={() => vaciarColeccion(c.key, c.label)}
+                  className="text-sm text-red-600 border border-red-200 hover:bg-red-50 px-3 py-1 rounded-md transition-colors"
+                >
+                  Vaciar
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={vaciarTodo}
+            className="w-full mt-5 bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Empezar de cero (borrar todo)
+          </button>
+
+          {datosMsg && (
+            <p className="text-sm mt-4 text-gray-700 bg-gray-50 border rounded px-3 py-2">
+              {datosMsg}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
