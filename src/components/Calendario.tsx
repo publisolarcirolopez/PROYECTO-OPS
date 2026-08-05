@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Operario, Obra, CeldaCalendario, EstadoCelda, Festivo } from '../types';
 import { useFirestoreState } from '../hooks/useFirestoreState';
 import { esFestivo, esFinDeSemana } from '../utils/capacidad';
@@ -307,6 +307,129 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
   );
 }
 
+interface BulkModalProps {
+  count: number;
+  obras: Obra[];
+  onApply: (estado: EstadoCelda, obrasCodigos: string[], nota: string) => void;
+  onClose: () => void;
+}
+
+function BulkModal({ count, obras, onApply, onClose }: BulkModalProps) {
+  const [estado, setEstado] = useState<EstadoCelda>('trabaja');
+  const [obrasCodigos, setObrasCodigos] = useState<string[]>([]);
+  const [nota, setNota] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showOptions, setShowOptions] = useState(false);
+
+  const obrasFiltradas = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return obras.filter(o => {
+      if (o.activa === false) return false;
+      return o.obraCodigo.toLowerCase().includes(term) || (o.nombre || '').toLowerCase().includes(term);
+    });
+  }, [obras, searchTerm]);
+
+  const seleccionarObra = (obra: Obra) => {
+    if (!obrasCodigos.includes(obra.obraCodigo)) setObrasCodigos([...obrasCodigos, obra.obraCodigo]);
+    setSearchTerm('');
+    setShowOptions(false);
+  };
+  const quitarObra = (codigo: string) => setObrasCodigos(obrasCodigos.filter(c => c !== codigo));
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 w-96 shadow-xl" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-bold text-charcoal mb-1">Asignar a {count} casillas</h3>
+        <p className="text-sm text-gray-500 mb-4">Se aplicará lo mismo a todas las casillas seleccionadas.</p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Estado</label>
+            <select
+              value={estado}
+              onChange={e => setEstado(e.target.value as EstadoCelda)}
+              className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm"
+            >
+              {ESTADOS.map(e => (
+                <option key={e} value={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+
+          {estado === 'trabaja' && (
+            <>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Obras asignadas</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {obrasCodigos.length === 0 && (
+                    <span className="text-gray-400 text-sm italic">Ninguna obra asignada</span>
+                  )}
+                  {obrasCodigos.map(codigo => {
+                    const ob = obras.find(o => o.obraCodigo === codigo);
+                    return (
+                      <div key={codigo} className="bg-brand-100 text-brand-700 text-xs px-2 py-1 rounded flex items-center gap-1">
+                        <span className="font-mono">{codigo}</span>
+                        {ob?.nombre && <span className="opacity-75 truncate max-w-[100px]">{ob.nombre}</span>}
+                        <button onClick={() => quitarObra(codigo)} className="ml-1 text-brand-600 hover:text-brand-800 font-bold">×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={e => { setSearchTerm(e.target.value); setShowOptions(true); }}
+                  onFocus={() => setShowOptions(true)}
+                  onBlur={() => setTimeout(() => setShowOptions(false), 200)}
+                  className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm"
+                  placeholder="Añadir obra por código o nombre..."
+                  autoComplete="off"
+                />
+                {showOptions && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {obrasFiltradas.length > 0 ? (
+                      obrasFiltradas.map(o => (
+                        <div key={o.obraCodigo} onClick={() => seleccionarObra(o)} className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm">
+                          {o.obraCodigo} {o.nombre ? `- ${o.nombre}` : ''}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-gray-500 text-sm">No hay resultados</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Nota (opcional)</label>
+                <input
+                  type="text"
+                  value={nota}
+                  onChange={e => setNota(e.target.value)}
+                  className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm"
+                  placeholder="Nota..."
+                />
+              </div>
+            </>
+          )}
+
+          {estado === 'libre' && (
+            <p className="text-sm text-gray-500 bg-gray-50 border rounded-lg px-3 py-2">
+              Se vaciarán las {count} casillas seleccionadas.
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <button onClick={() => onApply(estado, obrasCodigos, nota)} className="crm-btn flex-1 justify-center">
+            Aplicar a {count}
+          </button>
+          <button onClick={onClose} className="crm-btn-ghost">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Calendario() {
   const [operarios] = useFirestoreState<Operario[]>('operarios', []);
   const [obras] = useFirestoreState<Obra[]>('obras', []);
@@ -352,6 +475,86 @@ export function Calendario() {
     if (!modalCelda) return;
     setCeldas(prev => prev.filter(c => !(c.operarioId === modalCelda.operarioId && c.fecha === modalCelda.fecha)));
     setModalCelda(null);
+  };
+
+  // --- Selección por arrastre (multi-casilla) ---
+  const [selAnchor, setSelAnchor] = useState<{ r: number; c: number } | null>(null);
+  const [selFocus, setSelFocus] = useState<{ r: number; c: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [bulkCells, setBulkCells] = useState<{ operarioId: string; fecha: string }[] | null>(null);
+  const dragMultiRef = useRef(false);
+
+  const selKeys = useMemo(() => {
+    const s = new Set<string>();
+    if (!selAnchor || !selFocus) return s;
+    const r0 = Math.min(selAnchor.r, selFocus.r), r1 = Math.max(selAnchor.r, selFocus.r);
+    const c0 = Math.min(selAnchor.c, selFocus.c), c1 = Math.max(selAnchor.c, selFocus.c);
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) s.add(`${r}-${c}`);
+    return s;
+  }, [selAnchor, selFocus]);
+
+  const iniciarSel = (r: number, c: number) => {
+    setSelAnchor({ r, c });
+    setSelFocus({ r, c });
+    setDragging(true);
+    dragMultiRef.current = false;
+  };
+  const extenderSel = (r: number, c: number) => {
+    if (!dragging) return;
+    setSelFocus({ r, c });
+    if (selAnchor && (selAnchor.r !== r || selAnchor.c !== c)) dragMultiRef.current = true;
+  };
+
+  // Fin del arrastre en cualquier punto de la ventana
+  useEffect(() => {
+    if (!dragging) return;
+    const onUp = () => {
+      setDragging(false);
+      if (!selAnchor || !selFocus) return;
+      const r0 = Math.min(selAnchor.r, selFocus.r), r1 = Math.max(selAnchor.r, selFocus.r);
+      const c0 = Math.min(selAnchor.c, selFocus.c), c1 = Math.max(selAnchor.c, selFocus.c);
+      const cells: { operarioId: string; fecha: string }[] = [];
+      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+        const op = operariosActivos[r];
+        const d = diasSemana[c];
+        if (op && d) cells.push({ operarioId: op.id, fecha: formatFecha(d) });
+      }
+      if (cells.length > 1) {
+        setBulkCells(cells); // abre el editor masivo; mantiene el resaltado
+      } else {
+        setSelAnchor(null);
+        setSelFocus(null);
+      }
+    };
+    window.addEventListener('mouseup', onUp);
+    return () => window.removeEventListener('mouseup', onUp);
+  }, [dragging, selAnchor, selFocus, operariosActivos, diasSemana]);
+
+  const cerrarBulk = () => {
+    setBulkCells(null);
+    setSelAnchor(null);
+    setSelFocus(null);
+  };
+
+  const aplicarBulk = (estado: EstadoCelda, obrasCodigos: string[], nota: string) => {
+    if (!bulkCells) return;
+    const selSet = new Set(bulkCells.map(c => `${c.operarioId}|${c.fecha}`));
+    setCeldas(prev => {
+      const next = prev.filter(c => !selSet.has(`${c.operarioId}|${c.fecha}`));
+      if (estado !== 'libre') {
+        bulkCells.forEach(c => {
+          next.push({
+            operarioId: c.operarioId,
+            fecha: c.fecha,
+            estado,
+            obrasCodigos: estado === 'trabaja' ? [...obrasCodigos] : undefined,
+            nota: estado === 'trabaja' ? (nota || undefined) : undefined,
+          });
+        });
+      }
+      return next;
+    });
+    cerrarBulk();
   };
 
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -424,10 +627,14 @@ export function Calendario() {
         </button>
       </div>
 
+      <p className="text-xs text-gray-400 mb-2">
+        Consejo: arrastra sobre varias casillas para asignarles lo mismo de golpe.
+      </p>
+
       {/* Tabla */}
       <div className="crm-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse min-w-[820px]">
+          <table className="w-full border-collapse min-w-[820px] select-none">
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 border-b border-gray-100">
@@ -469,7 +676,7 @@ export function Calendario() {
                   </td>
                 </tr>
               ) : (
-                operariosActivos.map(op => (
+                operariosActivos.map((op, rowIdx) => (
                   <tr key={op.id}>
                     <td className="sticky left-0 z-10 bg-white px-4 py-2.5 border-b border-gray-50">
                       <div className="flex items-center gap-2.5">
@@ -486,13 +693,21 @@ export function Calendario() {
                       const esFDS = esFinDeSemana(fecha);
                       const esFest = esFestivo(fecha, festivos);
                       const listaObras = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
+                      const seleccionada = selKeys.has(`${rowIdx}-${i}`);
 
                       return (
                         <td
                           key={i}
-                          onClick={() => abrirModal(op.id, fecha)}
-                          className={`px-1.5 py-1.5 align-middle cursor-pointer border-b border-l border-gray-50 transition-colors hover:bg-brand-50/50 ${
-                            esFest ? 'bg-purple-50/40' : esFDS ? 'bg-gray-50/70' : ''
+                          onMouseDown={(e) => { e.preventDefault(); iniciarSel(rowIdx, i); }}
+                          onMouseEnter={() => extenderSel(rowIdx, i)}
+                          onClick={() => {
+                            if (dragMultiRef.current) { dragMultiRef.current = false; return; }
+                            abrirModal(op.id, fecha);
+                          }}
+                          className={`px-1.5 py-1.5 align-middle cursor-pointer border-b border-l border-gray-50 transition-colors ${
+                            seleccionada
+                              ? 'bg-brand-100 ring-2 ring-inset ring-brand-500'
+                              : `hover:bg-brand-50/50 ${esFest ? 'bg-purple-50/40' : esFDS ? 'bg-gray-50/70' : ''}`
                           }`}
                         >
                           <div className="min-h-[2.75rem] flex flex-col items-stretch justify-center gap-1">
@@ -527,7 +742,7 @@ export function Calendario() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal edición individual */}
       {modalCelda && (
         <Modal
           celda={modalCelda}
@@ -535,6 +750,16 @@ export function Calendario() {
           onClose={() => setModalCelda(null)}
           onSave={guardarCelda}
           onDelete={borrarCelda}
+        />
+      )}
+
+      {/* Modal asignación masiva (selección por arrastre) */}
+      {bulkCells && (
+        <BulkModal
+          count={bulkCells.length}
+          obras={obras}
+          onApply={aplicarBulk}
+          onClose={cerrarBulk}
         />
       )}
     </div>
