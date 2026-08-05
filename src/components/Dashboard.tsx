@@ -336,31 +336,31 @@ export function Dashboard() {
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Objetivo Mensual</h4>
             <p className="text-xl font-bold mt-1 text-gray-100">{kpis.control.objetivoMensual.toLocaleString('es-ES')} €</p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500 shadow-inner">
+          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-brand-500 shadow-inner">
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Obj. Acumulado</h4>
             <p className="text-xl font-bold mt-1 text-gray-100">{Math.round(kpis.control.objetivoAcumulado).toLocaleString('es-ES')} €</p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-emerald-500 shadow-inner">
+          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-brand-500 shadow-inner">
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Prod. Acumulada</h4>
             <p className="text-xl font-bold mt-1 text-white">{Math.round(kpis.control.produccionAcumulada).toLocaleString('es-ES')} €</p>
           </div>
-          <div className={`bg-gray-800 p-4 rounded-lg border-l-4 shadow-inner ${kpis.control.desviacion >= 0 ? 'border-emerald-400' : 'border-red-500'}`}>
+          <div className={`bg-gray-800 p-4 rounded-lg border-l-4 shadow-inner ${kpis.control.desviacion >= 0 ? 'border-brand-400' : 'border-red-500'}`}>
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Desviación Acum.</h4>
-            <p className={`text-xl font-bold mt-1 ${kpis.control.desviacion >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className={`text-xl font-bold mt-1 ${kpis.control.desviacion >= 0 ? 'text-brand-300' : 'text-red-400'}`}>
               {kpis.control.desviacion > 0 ? '+' : ''}{Math.round(kpis.control.desviacion).toLocaleString('es-ES')} €
             </p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-purple-500 shadow-inner">
+          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-gold-500 shadow-inner">
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Proyección Fin Mes</h4>
             <p className="text-xl font-bold mt-1 text-gray-100">{Math.round(kpis.control.proyeccionFinMes).toLocaleString('es-ES')} €</p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-sky-500 shadow-inner">
+          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-teal-500 shadow-inner">
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Días Lab. Restantes</h4>
-            <p className="text-xl font-bold mt-1 text-sky-300">{kpis.control.diasLaborablesRestantes}</p>
+            <p className="text-xl font-bold mt-1 text-teal-300">{kpis.control.diasLaborablesRestantes}</p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-amber-500 shadow-inner">
+          <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-gold-500 shadow-inner">
             <h4 className="text-gray-400 text-xs uppercase font-semibold">Media Diaria Req.</h4>
-            <p className="text-xl font-bold mt-1 text-amber-300">{Math.round(kpis.control.mediaDiariaRequerida).toLocaleString('es-ES')} €</p>
+            <p className="text-xl font-bold mt-1 text-gold-400">{Math.round(kpis.control.mediaDiariaRequerida).toLocaleString('es-ES')} €</p>
           </div>
         </div>
 
@@ -382,7 +382,7 @@ export function Dashboard() {
                     formatter={(val: any) => [`${Math.round(val).toLocaleString('es-ES')} €`, '']}
                   />
                   <Line type="monotone" dataKey="objetivoAcumulado" name="Objetivo Acum." stroke="#6b7280" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="prodRealAcumulada" name="Prod. Real" stroke="#10b981" strokeWidth={3} dot={{r: 2, fill: '#10b981'}} />
+                  <Line type="monotone" dataKey="prodRealAcumulada" name="Prod. Real" stroke="#6ba83a" strokeWidth={3} dot={{r: 2, fill: '#6ba83a'}} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -406,7 +406,7 @@ export function Dashboard() {
                   <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
                   <Bar dataKey="desviacion" radius={[2, 2, 0, 0]} maxBarSize={40}>
                     {kpis.datosAcumulados.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.desviacion >= 0 ? '#10b981' : '#ef4444'} />
+                      <Cell key={`cell-${index}`} fill={entry.desviacion >= 0 ? '#6ba83a' : '#ef4444'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -418,23 +418,23 @@ export function Dashboard() {
 
       {/* KPIs Principales */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-blue-500">
+        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-brand-500">
           <h3 className="text-sm font-medium text-gray-500">Producción Total</h3>
           <p className="text-2xl font-bold mt-1 text-gray-800">{kpis.produccionTotal.toLocaleString('es-ES', { maximumFractionDigits: 0 })} €</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-emerald-500">
+        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-gold-500">
           <h3 className="text-sm font-medium text-gray-500">Obras Activas</h3>
           <p className="text-2xl font-bold mt-1 text-gray-800">{kpis.numObras}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-purple-500">
+        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-teal-500">
           <h3 className="text-sm font-medium text-gray-500">Media Diaria</h3>
           <p className="text-2xl font-bold mt-1 text-gray-800">{kpis.prodMediaDia.toLocaleString('es-ES', { maximumFractionDigits: 0 })} €</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-orange-500">
+        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-gold-600">
           <h3 className="text-sm font-medium text-gray-500">Med. por Técnico</h3>
           <p className="text-2xl font-bold mt-1 text-gray-800">{kpis.prodMediaTech.toLocaleString('es-ES', { maximumFractionDigits: 0 })} €</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-pink-500">
+        <div className="bg-white p-4 rounded-lg shadow border-b-4 border-charcoal">
           <h3 className="text-sm font-medium text-gray-500">Equipos-Día</h3>
           <p className="text-2xl font-bold mt-1 text-gray-800">{kpis.equiposDia.toFixed(1)}</p>
         </div>
@@ -492,7 +492,7 @@ export function Dashboard() {
               />
               <Bar dataKey="prod" radius={[4, 4, 0, 0]} maxBarSize={50}>
                 {kpis.prodDiariaArr.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.prod > 0 ? '#3b82f6' : '#f87171'} />
+                  <Cell key={`cell-${index}`} fill={entry.prod > 0 ? '#6ba83a' : '#f87171'} />
                 ))}
               </Bar>
             </BarChart>
@@ -517,7 +517,7 @@ export function Dashboard() {
               </thead>
               <tbody className="text-sm divide-y divide-gray-100">
                 {statsOperarios.slice(0, 5).map(op => (
-                  <tr key={op.id} className="hover:bg-blue-50/30 transition-colors">
+                  <tr key={op.id} className="hover:bg-brand-50/40 transition-colors">
                     <td className="px-6 py-4">
                       <span className="font-semibold text-gray-800">{op.nombre}</span>
                     </td>
@@ -526,7 +526,7 @@ export function Dashboard() {
                       <span className="text-gray-400 text-xs ml-1">({op.diasLibres} L)</span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">
+                      <span className="text-brand-600 font-bold bg-brand-50 px-2 py-1 rounded">
                         {Math.round(op.prodIndividual).toLocaleString()} €
                       </span>
                     </td>
@@ -553,7 +553,7 @@ export function Dashboard() {
               </thead>
               <tbody className="text-sm divide-y divide-gray-100">
                 {statsEquipos.slice(0, 5).map((eq, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                  <tr key={idx} className="hover:bg-brand-50/40 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-800 text-xs">
                       <div className="max-w-[200px] truncate" title={eq.nombres}>
                         {eq.nombres}
@@ -563,7 +563,7 @@ export function Dashboard() {
                       <span className="font-medium">{eq.diasSet.size} días</span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded">
+                      <span className="text-teal-700 font-bold bg-teal-50 px-2 py-1 rounded">
                         {Math.round(eq.efic).toLocaleString()} €/d
                       </span>
                     </td>

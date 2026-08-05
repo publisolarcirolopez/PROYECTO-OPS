@@ -386,19 +386,19 @@ export function ResumenMensual() {
 
       {/* Tarjetas de Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-brand-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Facturación Total</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
             {resumenTotales.facturacionTotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-emerald-500">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-gold-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Participaciones Totales</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
             {fmtPart(resumenTotales.participacionesTotales)}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-charcoal">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Obras Activas</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
             {resumenTotales.obrasActivas}
@@ -438,7 +438,7 @@ export function ResumenMensual() {
                         {index + 1}
                       </td>
                       <td className="px-4 py-3 text-gray-800 font-medium">{op.nombre}</td>
-                      <td className="px-4 py-3 text-right text-blue-600 font-bold">
+                      <td className="px-4 py-3 text-right text-brand-600 font-bold">
                         {op.facturacion.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </td>
                       <td className="px-4 py-3 text-right text-gray-600">{fmtPart(op.participaciones)}</td>
@@ -465,7 +465,7 @@ export function ResumenMensual() {
               onClick={() => setOrdenEquipos('eficiencia')}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 ordenEquipos === 'eficiencia' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
+                  ? 'bg-white text-brand-600 shadow-sm' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -475,7 +475,7 @@ export function ResumenMensual() {
               onClick={() => setOrdenEquipos('frecuencia')}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 ordenEquipos === 'frecuencia' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
+                  ? 'bg-white text-brand-600 shadow-sm' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -518,7 +518,7 @@ export function ResumenMensual() {
                     <td className="px-4 py-3 text-center text-gray-600">
                       {eq.obrasCompartidas}
                     </td>
-                    <td className="px-4 py-3 text-right text-blue-600 font-bold">
+                    <td className="px-4 py-3 text-right text-brand-600 font-bold">
                       {eq.facturacion.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">

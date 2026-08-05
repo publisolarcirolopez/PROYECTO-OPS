@@ -180,7 +180,7 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
           <div className="flex gap-2">
             <button onClick={handleCopy} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200" type="button">Copiar</button>
             {hasCopiedData && (
-              <button onClick={handlePaste} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200" type="button">Pegar</button>
+              <button onClick={handlePaste} className="text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded hover:bg-brand-200" type="button">Pegar</button>
             )}
           </div>
         </div>
@@ -212,12 +212,12 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
                   {obrasCodigos.map(codigo => {
                     const ob = obras.find(o => o.obraCodigo === codigo);
                     return (
-                      <div key={codigo} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded flex items-center gap-1">
+                      <div key={codigo} className="bg-brand-100 text-brand-700 text-xs px-2 py-1 rounded flex items-center gap-1">
                         <span className="font-mono">{codigo}</span>
                         {ob?.nombre && <span className="opacity-75 truncate max-w-[100px]">{ob.nombre}</span>}
                         <button 
                           onClick={() => quitarObra(codigo)} 
-                          className="ml-1 text-blue-500 hover:text-blue-900 font-bold"
+                          className="ml-1 text-brand-600 hover:text-brand-800 font-bold"
                           title="Quitar"
                         >
                           ×
@@ -273,7 +273,7 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
         <div className="flex gap-2 mt-6">
           <button
             onClick={handleSave}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="flex-1 bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600"
           >
             Guardar
           </button>

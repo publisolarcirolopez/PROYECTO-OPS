@@ -131,7 +131,7 @@ export function GestionAusencias() {
           onClick={() => setTab('festivos')}
           className={`px-4 py-2 font-medium transition-colors ${
             tab === 'festivos'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-brand-600 border-b-2 border-brand-500'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -141,7 +141,7 @@ export function GestionAusencias() {
           onClick={() => setTab('ausencias')}
           className={`px-4 py-2 font-medium transition-colors ${
             tab === 'ausencias'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-brand-600 border-b-2 border-brand-500'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -180,7 +180,7 @@ export function GestionAusencias() {
               <button
                 onClick={agregarFestivo}
                 disabled={!fFecha}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600 disabled:opacity-50"
               >
                 Añadir
               </button>
@@ -306,7 +306,7 @@ export function GestionAusencias() {
               <button
                 onClick={guardarAusencia}
                 disabled={!formularioAusenciaValido}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600 disabled:opacity-50"
               >
                 {editandoId ? 'Guardar cambios' : 'Crear ausencia'}
               </button>
@@ -348,7 +348,7 @@ export function GestionAusencias() {
                       <tr
                         key={a.id}
                         className={`border-t hover:bg-gray-50 transition-colors ${
-                          editandoId === a.id ? 'bg-blue-50' : ''
+                          editandoId === a.id ? 'bg-brand-50' : ''
                         }`}
                       >
                         <td className="px-4 py-3 font-medium text-gray-800">{a.nombreOperario}</td>
@@ -368,7 +368,7 @@ export function GestionAusencias() {
                           <div className="flex gap-1 justify-end">
                             <button
                               onClick={() => editarAusencia(a)}
-                              className="text-blue-500 hover:text-blue-700 text-sm px-2 py-1 hover:bg-blue-50 rounded"
+                              className="text-brand-600 hover:text-brand-700 text-sm px-2 py-1 hover:bg-brand-50 rounded"
                             >
                               Editar
                             </button>

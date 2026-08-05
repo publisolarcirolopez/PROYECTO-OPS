@@ -10,8 +10,24 @@ import { GestionAusencias } from './components/GestionAusencias';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Logo } from './components/Logo';
 import { useAuth } from './hooks/useAuth';
 import { useUser } from './hooks/useUser';
+
+const TABS: { id: Modulo; label: string }[] = [
+  { id: 'operarios', label: 'Operarios' },
+  { id: 'obras', label: 'Obras' },
+  { id: 'calendario', label: 'Calendario' },
+  { id: 'resumen', label: 'Resumen' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'ausencias', label: 'Ausencias' },
+];
+
+const ROL_LABEL: Record<string, string> = {
+  instalador: 'Instalador',
+  jefe_produccion: 'Jefe de Producción',
+  director: 'Director',
+};
 
 function DashboardLayout() {
   const [modulo, setModulo] = useState<Modulo>('operarios');
@@ -23,96 +39,55 @@ function DashboardLayout() {
   };
 
   const isAdmin = userData?.rol === 'director';
+  const tabs: { id: Modulo; label: string }[] = isAdmin
+    ? [...TABS, { id: 'admin' as Modulo, label: 'Admin' }]
+    : TABS;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navegación */}
-      <nav className="bg-white border-b shadow-sm">
+      {/* Cabecera de marca */}
+      <header className="bg-white shadow-sm">
+        <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-gold-500" />
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1 justify-between items-center">
-            <div className="flex gap-1">
-              <button
-                onClick={() => setModulo('operarios')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  modulo === 'operarios'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Operarios
-              </button>
-              <button
-                onClick={() => setModulo('obras')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  modulo === 'obras'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Obras
-              </button>
-              <button
-                onClick={() => setModulo('calendario')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  modulo === 'calendario'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Calendario
-              </button>
-              <button
-                onClick={() => setModulo('resumen')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  modulo === 'resumen'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Resumen
-              </button>
-              <button
-                onClick={() => setModulo('dashboard')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  modulo === 'dashboard'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => setModulo('ausencias')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  modulo === 'ausencias'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Ausencias
-              </button>
-              {isAdmin && (
-                <button
-                  onClick={() => setModulo('admin' as Modulo)}
-                  className={`px-4 py-3 font-medium transition-colors ${
-                    modulo === 'admin'
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Admin
-                </button>
+          <div className="flex justify-between items-center py-3">
+            <Logo size={38} />
+            <div className="flex items-center gap-3">
+              {userData && (
+                <div className="hidden sm:flex flex-col items-end leading-tight">
+                  <span className="text-sm font-semibold text-charcoal">{userData.nombre}</span>
+                  <span className="text-xs text-brand-600 font-medium">
+                    {ROL_LABEL[userData.rol] || userData.rol}
+                  </span>
+                </div>
               )}
+              <button
+                onClick={handleLogout}
+                className="text-sm text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-md transition-colors"
+              >
+                Cerrar sesión
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Cerrar Sesión
-            </button>
           </div>
+
+          {/* Pestañas */}
+          <nav className="flex gap-1 -mb-px overflow-x-auto">
+            {tabs.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setModulo(t.id)}
+                className={`px-4 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
+                  modulo === t.id
+                    ? 'text-brand-600 border-brand-500'
+                    : 'text-gray-500 border-transparent hover:text-charcoal hover:border-brand-200'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
         </div>
-      </nav>
+        <div className="border-b" />
+      </header>
 
       {/* Contenido */}
       <main className="max-w-7xl mx-auto">

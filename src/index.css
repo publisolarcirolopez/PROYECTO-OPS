@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+/* ===== Identidad corporativa Publisolar ===== */
+/* Verde lima (primario), oro/naranja (acento) y gris carbón, tomados del
+   logotipo y la web de Publisolar. Estos tokens generan utilidades Tailwind
+   como bg-brand-500, text-brand-600, border-gold-500, text-charcoal, etc. */
+@theme {
+  --color-brand-50: #f3f8ec;
+  --color-brand-100: #e3f0d1;
+  --color-brand-200: #c8e2a6;
+  --color-brand-300: #a9d176;
+  --color-brand-400: #8cc34a;
+  --color-brand-500: #6ba83a;
+  --color-brand-600: #55892e;
+  --color-brand-700: #446e26;
+
+  --color-gold-400: #f6c445;
+  --color-gold-500: #f2b705;
+  --color-gold-600: #e0900c;
+
+  --color-charcoal: #3c3c3b;
+}

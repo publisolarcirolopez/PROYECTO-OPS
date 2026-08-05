@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Logo } from '@/components/Logo';
 
 export const AdminPage = () => {
   const [email, setEmail] = useState('');
@@ -55,13 +56,18 @@ export const AdminPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-gold-500" />
       <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Admin Panel</h1>
+        <div className="flex items-center gap-4">
+          <Logo size={34} />
+          <span className="text-gray-300">|</span>
+          <h1 className="text-lg font-bold text-charcoal">Panel de Administración</h1>
+        </div>
         <button
           onClick={handleLogout}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          className="text-sm text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-md transition-colors"
         >
-          Cerrar Sesión
+          Cerrar sesión
         </button>
       </nav>
 
@@ -121,7 +127,7 @@ export const AdminPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="w-full bg-brand-500 text-white font-semibold py-2 rounded-lg hover:bg-brand-600 transition-colors disabled:bg-gray-400"
           >
             {loading ? 'Creando...' : 'Crear Usuario'}
           </button>

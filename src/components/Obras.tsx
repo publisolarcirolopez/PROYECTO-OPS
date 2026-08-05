@@ -103,7 +103,7 @@ export function Obras() {
         ) : (
           <button
             onClick={agregarObra}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600"
           >
             Añadir
           </button>
@@ -136,7 +136,7 @@ export function Obras() {
               <td className="border px-3 py-2 text-center">
                 <button
                   onClick={() => iniciarEdicion(obra)}
-                  className="text-blue-600 hover:underline mr-4"
+                  className="text-brand-600 hover:underline mr-4"
                 >
                   Editar
                 </button>
