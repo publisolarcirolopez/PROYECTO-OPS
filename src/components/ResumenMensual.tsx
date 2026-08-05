@@ -11,6 +11,37 @@ const MESES = [
 const fmtPart = (n: number) =>
   n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
+// --- Ayudantes de semana (lunes-domingo), en fecha local (sin desfase UTC) ---
+function fechaLocal(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function agregarDias(fecha: Date, dias: number): Date {
+  const d = new Date(fecha);
+  d.setDate(d.getDate() + dias);
+  return d;
+}
+function getLunesDeSemana(fecha: Date): Date {
+  const d = new Date(fecha);
+  const dia = d.getDay();
+  const diff = dia === 0 ? -6 : 1 - dia;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+function getSemanasDelMes(anio: number, mes: number): Date[] {
+  const semanas: Date[] = [];
+  const primerDia = new Date(anio, mes, 1);
+  const ultimoDia = new Date(anio, mes + 1, 0);
+  let lunes = getLunesDeSemana(primerDia);
+  while (lunes <= ultimoDia) {
+    semanas.push(new Date(lunes));
+    lunes = agregarDias(lunes, 7);
+  }
+  return semanas;
+}
+
 export function ResumenMensual() {
   const [operarios] = useFirestoreState<Operario[]>('operarios', []);
   const [obras] = useFirestoreState<Obra[]>('obras', []);
@@ -19,14 +50,27 @@ export function ResumenMensual() {
   const hoy = new Date();
   const [anio, setAnio] = useState(hoy.getFullYear());
   const [mes, setMes] = useState(hoy.getMonth());
+  const [modo, setModo] = useState<'mes' | 'semana'>('mes');
+  const [semanaIndex, setSemanaIndex] = useState(0);
 
-  // Filtrar celdas del mes seleccionado
+  // Semanas del mes seleccionado (para el modo semanal)
+  const semanas = useMemo(() => getSemanasDelMes(anio, mes), [anio, mes]);
+  const rangoSemana = useMemo(() => {
+    const lunes = semanas[semanaIndex] || semanas[0];
+    if (!lunes) return null;
+    return { inicio: fechaLocal(lunes), fin: fechaLocal(agregarDias(lunes, 6)) };
+  }, [semanas, semanaIndex]);
+
+  // Filtrar celdas del período seleccionado (mes completo o semana)
   const celdasDelMes = useMemo(() => {
+    if (modo === 'semana' && rangoSemana) {
+      return calendario.filter(c => c.fecha >= rangoSemana.inicio && c.fecha <= rangoSemana.fin);
+    }
     return calendario.filter(celda => {
       const fecha = new Date(celda.fecha + 'T00:00:00');
       return fecha.getFullYear() === anio && fecha.getMonth() === mes;
     });
-  }, [calendario, anio, mes]);
+  }, [calendario, anio, mes, modo, rangoSemana]);
 
   // Operarios activos
   const operariosActivos = useMemo(() => {
@@ -162,7 +206,11 @@ export function ResumenMensual() {
       facturacionTotal += op.facturacion;
     });
 
-    return { facturacionTotal, participacionesTotales, obrasActivas };
+    // Media global del período: producción total ÷ equipo-días totales (equipo = 3 personas)
+    const equipoDiasTotales = participacionesTotales / 3;
+    const eurEquipoDiaMedio = equipoDiasTotales > 0 ? facturacionTotal / equipoDiasTotales : 0;
+
+    return { facturacionTotal, participacionesTotales, obrasActivas, equipoDiasTotales, eurEquipoDiaMedio };
   }, [datosObras, datosOperarios]);
 
   // Ranking de instaladores
@@ -338,16 +386,16 @@ export function ResumenMensual() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Resumen Mensual</h2>
-      
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Resumen</h2>
+
       {/* Selectores */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap items-end">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
             <select
               value={anio}
-              onChange={(e) => setAnio(Number(e.target.value))}
+              onChange={(e) => { setAnio(Number(e.target.value)); setSemanaIndex(0); }}
               className="border rounded px-3 py-2 text-gray-700"
             >
               {anios.map(a => (
@@ -359,7 +407,7 @@ export function ResumenMensual() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Mes</label>
             <select
               value={mes}
-              onChange={(e) => setMes(Number(e.target.value))}
+              onChange={(e) => { setMes(Number(e.target.value)); setSemanaIndex(0); }}
               className="border rounded px-3 py-2 text-gray-700"
             >
               {MESES.map((m, i) => (
@@ -367,6 +415,55 @@ export function ResumenMensual() {
               ))}
             </select>
           </div>
+
+          {/* Toggle período */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setModo('mes')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  modo === 'mes' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Mes
+              </button>
+              <button
+                onClick={() => setModo('semana')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  modo === 'semana' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Semana
+              </button>
+            </div>
+          </div>
+
+          {/* Navegador de semana */}
+          {modo === 'semana' && rangoSemana && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Semana</label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSemanaIndex(Math.max(0, semanaIndex - 1))}
+                  disabled={semanaIndex === 0}
+                  className="px-3 py-2 border rounded disabled:opacity-40"
+                >
+                  ◀
+                </button>
+                <span className="text-sm text-gray-700 whitespace-nowrap">
+                  {semanaIndex + 1}/{semanas.length} · {rangoSemana.inicio.slice(8)}–{rangoSemana.fin.slice(8)}
+                </span>
+                <button
+                  onClick={() => setSemanaIndex(Math.min(semanas.length - 1, semanaIndex + 1))}
+                  disabled={semanaIndex >= semanas.length - 1}
+                  className="px-3 py-2 border rounded disabled:opacity-40"
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -392,7 +489,16 @@ export function ResumenMensual() {
       )}
 
       {/* Tarjetas de Resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+        <div className="bg-brand-600 rounded-lg shadow p-6">
+          <h3 className="text-white/80 text-sm font-medium uppercase">Media €/equipo·día</h3>
+          <p className="text-3xl font-bold text-white mt-2">
+            {resumenTotales.eurEquipoDiaMedio.toLocaleString('es-ES', { maximumFractionDigits: 0 })} €
+          </p>
+          <p className="text-white/70 text-xs mt-1">
+            {resumenTotales.equipoDiasTotales.toLocaleString('es-ES', { maximumFractionDigits: 1 })} equipo-días · {modo === 'semana' ? 'esta semana' : 'este mes'}
+          </p>
+        </div>
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-brand-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Facturación Total</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
@@ -500,7 +606,7 @@ export function ResumenMensual() {
                 <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">Obras Comp.</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Producción Total (€)</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Equipos-día</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Eficiencia (€/día)</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-brand-700">€/equipo·día</th>
               </tr>
             </thead>
             <tbody>
@@ -531,8 +637,8 @@ export function ResumenMensual() {
                     <td className="px-4 py-3 text-right text-gray-600">
                       {eq.equiposDia.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-800 font-bold">
-                      {eq.eurPorEquipoDia.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                    <td className="px-4 py-3 text-right text-brand-700 font-bold">
+                      {eq.eurPorEquipoDia.toLocaleString('es-ES', { maximumFractionDigits: 0 })} €
                     </td>
                   </tr>
                 ))
