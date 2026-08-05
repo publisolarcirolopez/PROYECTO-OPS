@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/config/firebase';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { db, firebaseConfig } from '@/config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Logo } from '@/components/Logo';
 
@@ -23,12 +24,17 @@ export const AdminPage = () => {
     setError('');
     setSuccess('');
 
+    // App Firebase SECUNDARIA: crea el usuario sin cambiar la sesión actual.
+    // Con la app principal, createUserWithEmailAndPassword firma como el nuevo
+    // usuario y expulsaría al director. Nombre único por instante para no colisionar.
+    const secondaryApp = initializeApp(firebaseConfig, `crear-usuario-${Date.now()}`);
+    const secondaryAuth = getAuth(secondaryApp);
+
     try {
-      // Crear usuario en Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
       const uid = userCredential.user.uid;
 
-      // Guardar datos en Firestore
+      // Guardar datos en Firestore (con la app principal, ya autenticada como director)
       await addDoc(collection(db, 'users'), {
         uid,
         email,
@@ -37,7 +43,7 @@ export const AdminPage = () => {
         createdAt: serverTimestamp(),
       });
 
-      setSuccess(`Usuario ${nombre} creado exitosamente`);
+      setSuccess(`Usuario ${nombre} creado correctamente`);
       setEmail('');
       setPassword('');
       setNombre('');
@@ -45,6 +51,9 @@ export const AdminPage = () => {
     } catch (err: any) {
       setError(err.message);
     } finally {
+      // Cerrar y desechar la app secundaria pase lo que pase.
+      await signOut(secondaryAuth).catch(() => {});
+      await deleteApp(secondaryApp).catch(() => {});
       setLoading(false);
     }
   };

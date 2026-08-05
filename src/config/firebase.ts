@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyDTcgF9U3R04MJ6WL7acSMCoAtv4EclHpc",
   authDomain: "publisolar-ops.firebaseapp.com",
   projectId: "publisolar-ops",

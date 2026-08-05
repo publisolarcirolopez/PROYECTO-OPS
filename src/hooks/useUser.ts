@@ -20,13 +20,18 @@ export const useUser = (uid: string | null) => {
       return;
     }
 
+    setLoading(true);
     const fetchUser = async () => {
-      const docRef = doc(db, 'users', uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setUserData(docSnap.data() as UserData);
+      try {
+        const docRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(docRef);
+        setUserData(docSnap.exists() ? (docSnap.data() as UserData) : null);
+      } catch (err) {
+        console.error('[useUser] Error cargando el usuario:', err);
+        setUserData(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchUser();

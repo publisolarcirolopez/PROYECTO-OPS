@@ -1,21 +1,35 @@
 import { useState } from 'react';
-import { Obra } from '../types';
+import { Obra, CeldaCalendario } from '../types';
 import { useFirestoreState } from '../hooks/useFirestoreState';
 
 export function Obras() {
   const [obras, setObras] = useFirestoreState<Obra[]>('obras', []);
+  const [, setCalendario] = useFirestoreState<CeldaCalendario[]>('calendario', []);
   const [editando, setEditando] = useState<string | null>(null);
   const [formData, setFormData] = useState({ obraCodigo: '', nombre: '', importeTotal: 0 });
+  const [aviso, setAviso] = useState('');
 
   const resetForm = () => {
     setFormData({ obraCodigo: '', nombre: '', importeTotal: 0 });
     setEditando(null);
+    setAviso('');
   };
 
+  // ¿Existe ya ese código en otra obra? (ignora mayúsculas; excluye la que se edita)
+  const codigoDuplicado = (codigo: string, excluir?: string) =>
+    obras.some(
+      o => o.obraCodigo.toLowerCase() === codigo.toLowerCase() && o.obraCodigo !== excluir
+    );
+
   const agregarObra = () => {
-    if (!formData.obraCodigo.trim()) return;
+    const codigo = formData.obraCodigo.trim();
+    if (!codigo) return;
+    if (codigoDuplicado(codigo)) {
+      setAviso(`Ya existe una obra con el código "${codigo}".`);
+      return;
+    }
     const nueva: Obra = {
-      obraCodigo: formData.obraCodigo.trim(),
+      obraCodigo: codigo,
       nombre: formData.nombre.trim() || undefined,
       importeTotal: Number(formData.importeTotal) || 0,
       activa: true,
@@ -26,6 +40,7 @@ export function Obras() {
 
   const iniciarEdicion = (obra: Obra) => {
     setEditando(obra.obraCodigo);
+    setAviso('');
     setFormData({
       obraCodigo: obra.obraCodigo,
       nombre: obra.nombre || '',
@@ -35,16 +50,38 @@ export function Obras() {
 
   const guardarEdicion = () => {
     if (!editando) return;
-    setObras(obras.map(o => 
-      o.obraCodigo === editando 
-        ? { 
-            obraCodigo: formData.obraCodigo.trim(), 
-            nombre: formData.nombre.trim() || undefined, 
+    const nuevoCodigo = formData.obraCodigo.trim();
+    if (!nuevoCodigo) return;
+    if (codigoDuplicado(nuevoCodigo, editando)) {
+      setAviso(`Ya existe otra obra con el código "${nuevoCodigo}".`);
+      return;
+    }
+
+    setObras(obras.map(o =>
+      o.obraCodigo === editando
+        ? {
+            obraCodigo: nuevoCodigo,
+            nombre: formData.nombre.trim() || undefined,
             importeTotal: Number(formData.importeTotal) || 0,
-            activa: o.activa !== false
+            activa: o.activa !== false,
           }
         : o
     ));
+
+    // Si cambió el código, propagar el renombrado a las celdas del calendario
+    // para no dejar huérfanas las que referencian el código antiguo.
+    if (nuevoCodigo !== editando) {
+      setCalendario(prev => prev.map(celda => {
+        const cods = celda.obrasCodigos || (celda.obraCodigo ? [celda.obraCodigo] : []);
+        if (!cods.includes(editando)) return celda;
+        return {
+          ...celda,
+          obraCodigo: celda.obraCodigo === editando ? nuevoCodigo : celda.obraCodigo,
+          obrasCodigos: cods.map(c => (c === editando ? nuevoCodigo : c)),
+        };
+      }));
+    }
+
     resetForm();
   };
 
@@ -89,7 +126,7 @@ export function Obras() {
           <>
             <button
               onClick={guardarEdicion}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              className="bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600"
             >
               Guardar
             </button>
@@ -109,6 +146,12 @@ export function Obras() {
           </button>
         )}
       </div>
+
+      {aviso && (
+        <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm mb-6">
+          {aviso}
+        </p>
+      )}
 
       {/* Lista */}
       <table className="w-full border-collapse">

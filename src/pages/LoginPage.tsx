@@ -3,6 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Logo } from '@/components/Logo';
 
+// Traduce los códigos de error de Firebase Auth a mensajes claros en español.
+function mensajeError(code?: string): string {
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'El email no tiene un formato válido.';
+    case 'auth/user-disabled':
+      return 'Esta cuenta está deshabilitada.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Email o contraseña incorrectos.';
+    case 'auth/too-many-requests':
+      return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.';
+    case 'auth/network-request-failed':
+      return 'Sin conexión. Revisa tu red e inténtalo de nuevo.';
+    default:
+      return 'No se pudo iniciar sesión. Inténtalo de nuevo.';
+  }
+}
+
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +40,7 @@ export const LoginPage = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      setError(mensajeError(err?.code));
     } finally {
       setLoading(false);
     }
