@@ -100,12 +100,19 @@ export function ResumenMensual() {
           ? obra.importeTotal / participacionesGlobales
           : 0;
 
+        // Métrica del informe general: importe ÷ equipo-días, donde un equipo = 3 personas.
+        // equipo-días = jornadas-persona (globales, fraccionadas por multi-obra) ÷ 3.
+        const equipoDias = participacionesGlobales / 3;
+        const eurPorEquipoDia = equipoDias > 0 ? obra.importeTotal / equipoDias : 0;
+
         return {
           obraCodigo: obra.obraCodigo,
           nombre: obra.nombre || '-',
           importeTotal: obra.importeTotal,
           numParticipaciones,
-          valorPorParticipacion
+          valorPorParticipacion,
+          equipoDias,
+          eurPorEquipoDia
         };
       });
   }, [obras, participacionesPorObra, participacionesGlobalesPorObra]);
@@ -586,12 +593,14 @@ export function ResumenMensual() {
                 <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Importe Total (€)</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Participaciones</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Valor/Part. (€)</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Equipo-días</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-brand-700">€/equipo·día</th>
               </tr>
             </thead>
             <tbody>
               {datosObras.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     No hay obras registradas
                   </td>
                 </tr>
@@ -606,6 +615,12 @@ export function ResumenMensual() {
                     <td className="px-4 py-3 text-right text-gray-600">{fmtPart(obra.numParticipaciones)}</td>
                     <td className="px-4 py-3 text-right text-gray-800 font-medium">
                       {obra.valorPorParticipacion.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-600">
+                      {obra.equipoDias.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-3 text-right text-brand-700 font-bold">
+                      {obra.eurPorEquipoDia.toLocaleString('es-ES', { maximumFractionDigits: 0 })} €
                     </td>
                   </tr>
                 ))
