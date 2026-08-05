@@ -6,37 +6,46 @@ import { exportarPlanningSemanalPDF } from '../utils/exportPdf';
 
 const ESTADOS: EstadoCelda[] = ['trabaja', 'vacaciones', 'baja', 'festivo', 'permiso', 'libre'];
 
-const COLORES: Record<EstadoCelda, string> = {
-  trabaja: 'bg-green-100 hover:bg-green-200',
-  vacaciones: 'bg-yellow-100 hover:bg-yellow-200',
-  baja: 'bg-red-100 hover:bg-red-200',
-  festivo: 'bg-purple-100 hover:bg-purple-200',
-  permiso: 'bg-orange-100 hover:bg-orange-200',
-  libre: 'bg-gray-50 hover:bg-gray-100',
-};
-
-const PALETA_OBRAS = [
-  'bg-blue-100 hover:bg-blue-200',
-  'bg-emerald-100 hover:bg-emerald-200',
-  'bg-violet-100 hover:bg-violet-200',
-  'bg-amber-100 hover:bg-amber-200',
-  'bg-pink-100 hover:bg-pink-200',
-  'bg-cyan-100 hover:bg-cyan-200',
-  'bg-rose-100 hover:bg-rose-200',
-  'bg-lime-100 hover:bg-lime-200',
-  'bg-fuchsia-100 hover:bg-fuchsia-200',
-  'bg-sky-100 hover:bg-sky-200',
-  'bg-orange-100 hover:bg-orange-200',
-  'bg-teal-100 hover:bg-teal-200',
-  'bg-indigo-100 hover:bg-indigo-200',
+// Paleta de "chips" de obra (fondo + texto) para las celdas del calendario.
+const PALETA_PILLS = [
+  'bg-blue-100 text-blue-800',
+  'bg-emerald-100 text-emerald-800',
+  'bg-violet-100 text-violet-800',
+  'bg-amber-100 text-amber-800',
+  'bg-pink-100 text-pink-800',
+  'bg-cyan-100 text-cyan-800',
+  'bg-rose-100 text-rose-800',
+  'bg-lime-100 text-lime-800',
+  'bg-fuchsia-100 text-fuchsia-800',
+  'bg-sky-100 text-sky-800',
+  'bg-orange-100 text-orange-800',
+  'bg-teal-100 text-teal-800',
+  'bg-indigo-100 text-indigo-800',
 ];
-
-function getColorObra(codigo: string) {
+function getPillObra(codigo: string) {
   let hash = 0;
   for (let i = 0; i < codigo.length; i++) {
     hash = codigo.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return PALETA_OBRAS[Math.abs(hash) % PALETA_OBRAS.length];
+  return PALETA_PILLS[Math.abs(hash) % PALETA_PILLS.length];
+}
+
+const ESTADO_PILL: Record<string, string> = {
+  vacaciones: 'bg-amber-100 text-amber-800',
+  baja: 'bg-red-100 text-red-800',
+  permiso: 'bg-orange-100 text-orange-800',
+  festivo: 'bg-purple-100 text-purple-800',
+};
+const ESTADO_LABEL: Record<string, string> = {
+  vacaciones: 'Vacaciones',
+  baja: 'Baja',
+  permiso: 'Permiso',
+  festivo: 'Festivo',
+  trabaja: '',
+  libre: '',
+};
+function iniciales(nombre: string) {
+  return nombre.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
 }
 
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -351,11 +360,11 @@ export function Calendario() {
   return (
     <div className="p-6">
       {/* Controles */}
-      <div className="flex gap-4 mb-6 items-center flex-wrap">
+      <div className="crm-card p-3 mb-6 flex gap-3 items-center flex-wrap">
         <select
           value={year}
           onChange={e => { setYear(Number(e.target.value)); setSemanaIndex(0); }}
-          className="border px-3 py-2 rounded"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
         >
           {[year - 1, year, year + 1].map(y => (
             <option key={y} value={y}>{y}</option>
@@ -365,26 +374,35 @@ export function Calendario() {
         <select
           value={month}
           onChange={e => { setMonth(Number(e.target.value)); setSemanaIndex(0); }}
-          className="border px-3 py-2 rounded"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
         >
           {meses.map((m, i) => (
             <option key={i} value={i}>{m}</option>
           ))}
         </select>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 ml-1">
           <button
             onClick={() => setSemanaIndex(Math.max(0, semanaIndex - 1))}
             disabled={semanaIndex === 0}
-            className="px-3 py-2 border rounded disabled:opacity-50"
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
           >
             ◀
           </button>
-          <span className="px-3">Semana {semanaIndex + 1} de {semanas.length}</span>
+          <div className="px-3 text-center min-w-[7rem]">
+            <div className="text-sm font-semibold text-charcoal">
+              Semana {semanaIndex + 1}<span className="text-gray-400 font-normal"> / {semanas.length}</span>
+            </div>
+            {diasSemana.length === 7 && (
+              <div className="text-xs text-gray-400">
+                {diasSemana[0].getDate()}–{diasSemana[6].getDate()} {meses[diasSemana[6].getMonth()].toLowerCase()}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setSemanaIndex(Math.min(semanas.length - 1, semanaIndex + 1))}
             disabled={semanaIndex >= semanas.length - 1}
-            className="px-3 py-2 border rounded disabled:opacity-50"
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
           >
             ▶
           </button>
@@ -399,7 +417,7 @@ export function Calendario() {
             festivos,
           })}
           disabled={operariosActivos.length === 0 || diasSemana.length === 0}
-          className="ml-auto bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+          className="crm-btn ml-auto"
           title="Descargar el planning de esta semana en PDF"
         >
           <span>📄</span> Exportar PDF
@@ -407,102 +425,106 @@ export function Calendario() {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[800px]">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border px-3 py-2 text-left sticky left-0 bg-gray-100">Operario</th>
-              {diasSemana.map((d, i) => {
-                const fechaStr = formatFecha(d);
-                const esFDS = esFinDeSemana(fechaStr);
-                const esFest = esFestivo(fechaStr, festivos);
-                const festNombre = festivos.find(f => f.fecha === fechaStr)?.nombre;
-                return (
-                  <th
-                    key={i}
-                    className={`border px-2 py-2 text-center min-w-[100px] ${
-                      esFDS ? 'bg-gray-200 text-gray-500' : esFest ? 'bg-purple-100' : ''
-                    }`}
-                  >
-                    <div>{DIAS[i]}</div>
-                    <div className="text-sm text-gray-500">{d.getDate()}</div>
-                    {esFest && (
-                      <div
-                        className="text-[9px] font-semibold text-purple-700 bg-purple-200 rounded px-1 mt-0.5 truncate max-w-[90px] mx-auto"
-                        title={festNombre || 'Festivo'}
-                      >
-                        {festNombre || 'Festivo'}
-                      </div>
-                    )}
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {operariosActivos.length === 0 ? (
+      <div className="crm-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse min-w-[820px]">
+            <thead>
               <tr>
-                <td colSpan={8} className="border px-3 py-8 text-center text-gray-400">
-                  No hay operarios activos
-                </td>
+                <th className="sticky left-0 z-10 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 border-b border-gray-100">
+                  Instalador
+                </th>
+                {diasSemana.map((d, i) => {
+                  const fechaStr = formatFecha(d);
+                  const esFDS = esFinDeSemana(fechaStr);
+                  const esFest = esFestivo(fechaStr, festivos);
+                  const festNombre = festivos.find(f => f.fecha === fechaStr)?.nombre;
+                  return (
+                    <th
+                      key={i}
+                      className={`px-2 py-2.5 text-center border-b border-l border-gray-100 min-w-[104px] ${
+                        esFest ? 'bg-purple-50' : esFDS ? 'bg-gray-50' : 'bg-gray-50/60'
+                      }`}
+                    >
+                      <div className={`text-[11px] uppercase tracking-wide font-semibold ${esFDS ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {DIAS[i]}
+                      </div>
+                      <div className={`text-base font-bold ${esFest ? 'text-purple-700' : 'text-charcoal'}`}>
+                        {d.getDate()}
+                      </div>
+                      {esFest && (
+                        <div className="text-[8px] font-semibold text-purple-600 truncate max-w-[90px] mx-auto" title={festNombre || 'Festivo'}>
+                          {festNombre || 'Festivo'}
+                        </div>
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
-            ) : (
-              operariosActivos.map(op => (
-                <tr key={op.id}>
-                  <td className="border px-3 py-2 font-medium sticky left-0 bg-white">{op.nombre}</td>
-                  {diasSemana.map((d, i) => {
-                    const fecha = formatFecha(d);
-                    const celda = getCelda(op.id, fecha);
-                    const estado = celda?.estado || 'libre';
-                    const esFDS = esFinDeSemana(fecha);
-                    const esFest = esFestivo(fecha, festivos);
-
-                    const listaObras = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
-                    let bgClass = COLORES[estado];
-                    if (estado === 'trabaja' && listaObras.length === 1) {
-                      bgClass = getColorObra(listaObras[0]);
-                    } else if (estado === 'trabaja' && listaObras.length > 1) {
-                      // Varias obras el mismo día: color neutro; los códigos ya se listan debajo
-                      bgClass = 'bg-slate-200 hover:bg-slate-300';
-                    }
-                    // Fin de semana sin datos registrados: fondo gris suave
-                    if (esFDS && estado === 'libre') {
-                      bgClass = 'bg-gray-100 hover:bg-gray-200';
-                    }
-
-                    return (
-                      <td
-                        key={i}
-                        onClick={() => abrirModal(op.id, fecha)}
-                        className={`border px-2 py-3 text-center cursor-pointer ${bgClass} align-top`}
-                      >
-                        {esFDS && estado === 'libre' ? (
-                          <div className="text-[10px] text-gray-400">{DIAS[i] === 'Sáb' ? 'Sáb' : 'Dom'}</div>
-                        ) : (
-                          <>
-                            <div className="text-xs capitalize mb-1">{estado}</div>
-                            {esFest && estado === 'libre' && (
-                              <div className="text-[9px] text-purple-600 font-semibold">Festivo</div>
-                            )}
-                            {listaObras.length > 0 && (
-                              <div className="flex flex-wrap justify-center gap-1">
-                                {listaObras.map((codigoObra, idx) => (
-                                  <div key={idx} className="text-[10px] font-mono bg-white/50 px-1 rounded truncate max-w-[60px]" title={codigoObra}>
-                                    {codigoObra}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </td>
-                    );
-                  })}
+            </thead>
+            <tbody>
+              {operariosActivos.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+                    No hay instaladores activos
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                operariosActivos.map(op => (
+                  <tr key={op.id}>
+                    <td className="sticky left-0 z-10 bg-white px-4 py-2.5 border-b border-gray-50">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold flex items-center justify-center shrink-0">
+                          {iniciales(op.nombre)}
+                        </div>
+                        <span className="font-medium text-charcoal text-sm whitespace-nowrap">{op.nombre}</span>
+                      </div>
+                    </td>
+                    {diasSemana.map((d, i) => {
+                      const fecha = formatFecha(d);
+                      const celda = getCelda(op.id, fecha);
+                      const estado = celda?.estado || 'libre';
+                      const esFDS = esFinDeSemana(fecha);
+                      const esFest = esFestivo(fecha, festivos);
+                      const listaObras = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
+
+                      return (
+                        <td
+                          key={i}
+                          onClick={() => abrirModal(op.id, fecha)}
+                          className={`px-1.5 py-1.5 align-middle cursor-pointer border-b border-l border-gray-50 transition-colors hover:bg-brand-50/50 ${
+                            esFest ? 'bg-purple-50/40' : esFDS ? 'bg-gray-50/70' : ''
+                          }`}
+                        >
+                          <div className="min-h-[2.75rem] flex flex-col items-stretch justify-center gap-1">
+                            {estado === 'trabaja' ? (
+                              listaObras.length > 0 ? (
+                                listaObras.map((cod, idx) => (
+                                  <span
+                                    key={idx}
+                                    title={cod}
+                                    className={`text-[10px] font-semibold px-1.5 py-0.5 rounded text-center truncate ${getPillObra(cod)}`}
+                                  >
+                                    {cod}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-[10px] text-gray-300 text-center">—</span>
+                              )
+                            ) : estado !== 'libre' ? (
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded text-center ${ESTADO_PILL[estado] || 'bg-gray-100 text-gray-600'}`}>
+                                {ESTADO_LABEL[estado]}
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
