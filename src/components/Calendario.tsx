@@ -89,24 +89,36 @@ function getSemanasDelMes(year: number, month: number): Date[] {
   return semanas;
 }
 
+// Marcador entre dos días de un instalador (p. ej. "Hotel"). `fecha` = el día
+// tras el cual se muestra el badge (en el borde con el día siguiente).
+interface Marcador {
+  operarioId: string;
+  fecha: string;
+  texto: string;
+}
+
 let celdaCopiada: Partial<CeldaCalendario> | null = null;
 
 interface ModalProps {
   celda: CeldaCalendario | null;
   obras: Obra[];
+  marcadorInicial?: string;
+  esUltimoDia?: boolean;
   onClose: () => void;
   onSave: (celda: CeldaCalendario) => void;
+  onSaveMarcador: (texto: string) => void;
   onDelete: () => void;
 }
 
-function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
+function Modal({ celda, obras, marcadorInicial, esUltimoDia, onClose, onSave, onSaveMarcador, onDelete }: ModalProps) {
   const [estado, setEstado] = useState<EstadoCelda>(celda?.estado || 'libre');
-  
+
   // Compatibilidad hacia atrás: si tiene obraCodigo único, lo pasamos a array
   const initialObras = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
   const [obrasCodigos, setObrasCodigos] = useState<string[]>(initialObras);
-  
+
   const [nota, setNota] = useState(celda?.nota || '');
+  const [marcador, setMarcador] = useState(marcadorInicial || '');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showOptions, setShowOptions] = useState(false);
@@ -167,6 +179,7 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
   };
 
   const handleSave = () => {
+    onSaveMarcador(marcador.trim());
     onSave({
       ...celda,
       estado,
@@ -267,16 +280,30 @@ function Modal({ celda, obras, onClose, onSave, onDelete }: ModalProps) {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Nota (opcional)</label>
+                <label className="block text-sm font-medium mb-1">Nota del día (opcional)</label>
                 <input
                   type="text"
                   value={nota}
                   onChange={e => setNota(e.target.value)}
-                  className="w-full border px-3 py-2 rounded"
-                  placeholder="Nota..."
+                  className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm"
+                  placeholder="Ej: 7 am allí, reconocimiento médico 10:45..."
                 />
               </div>
             </>
+          )}
+
+          {!esUltimoDia && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Marcador tras este día (opcional)</label>
+              <input
+                type="text"
+                value={marcador}
+                onChange={e => setMarcador(e.target.value)}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm"
+                placeholder="Ej: Hotel, Grúa..."
+              />
+              <p className="text-xs text-gray-400 mt-1">Se muestra en el borde, entre este día y el siguiente (p. ej. noche de hotel).</p>
+            </div>
           )}
         </div>
 
@@ -435,6 +462,18 @@ export function Calendario() {
   const [obras] = useFirestoreState<Obra[]>('obras', []);
   const [celdas, setCeldas] = useFirestoreState<CeldaCalendario[]>('calendario', []);
   const [festivos] = useFirestoreState<Festivo[]>('festivos', []);
+  const [marcadores, setMarcadores] = useFirestoreState<Marcador[]>('marcadores', []);
+
+  const getMarcador = (operarioId: string, fecha: string) =>
+    marcadores.find(m => m.operarioId === operarioId && m.fecha === fecha)?.texto || '';
+
+  const guardarMarcador = (operarioId: string, fecha: string, texto: string) => {
+    setMarcadores(prev => {
+      const next = prev.filter(m => !(m.operarioId === operarioId && m.fecha === fecha));
+      if (texto) next.push({ operarioId, fecha, texto });
+      return next;
+    });
+  };
 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -618,6 +657,7 @@ export function Calendario() {
             celdas,
             obras,
             festivos,
+            marcadores,
           })}
           disabled={operariosActivos.length === 0 || diasSemana.length === 0}
           className="crm-btn ml-auto"
@@ -694,6 +734,7 @@ export function Calendario() {
                       const esFest = esFestivo(fecha, festivos);
                       const listaObras = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
                       const seleccionada = selKeys.has(`${rowIdx}-${i}`);
+                      const marcador = i < 6 ? getMarcador(op.id, fecha) : '';
 
                       return (
                         <td
@@ -704,7 +745,7 @@ export function Calendario() {
                             if (dragMultiRef.current) { dragMultiRef.current = false; return; }
                             abrirModal(op.id, fecha);
                           }}
-                          className={`px-1.5 py-1.5 align-middle cursor-pointer border-b border-l border-gray-50 transition-colors ${
+                          className={`relative px-1.5 py-1.5 align-middle cursor-pointer border-b border-l border-gray-50 transition-colors ${
                             seleccionada
                               ? 'bg-brand-100 ring-2 ring-inset ring-brand-500'
                               : `hover:bg-brand-50/50 ${esFest ? 'bg-purple-50/40' : esFDS ? 'bg-gray-50/70' : ''}`
@@ -730,7 +771,17 @@ export function Calendario() {
                                 {ESTADO_LABEL[estado]}
                               </span>
                             ) : null}
+                            {celda?.nota && (
+                              <span className="text-[9px] text-gray-500 leading-snug text-center break-words">{celda.nota}</span>
+                            )}
                           </div>
+                          {marcador && (
+                            <div className="absolute top-1 right-0 translate-x-1/2 z-20 pointer-events-none">
+                              <span className="bg-charcoal text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded shadow whitespace-nowrap">
+                                {marcador}
+                              </span>
+                            </div>
+                          )}
                         </td>
                       );
                     })}
@@ -747,8 +798,11 @@ export function Calendario() {
         <Modal
           celda={modalCelda}
           obras={obras}
+          marcadorInicial={getMarcador(modalCelda.operarioId, modalCelda.fecha)}
+          esUltimoDia={diasSemana.length === 7 && modalCelda.fecha === formatFecha(diasSemana[6])}
           onClose={() => setModalCelda(null)}
           onSave={guardarCelda}
+          onSaveMarcador={(texto) => guardarMarcador(modalCelda.operarioId, modalCelda.fecha, texto)}
           onDelete={borrarCelda}
         />
       )}

@@ -34,15 +34,22 @@ function fechaLocal(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+interface Marcador {
+  operarioId: string;
+  fecha: string;
+  texto: string;
+}
+
 interface ExportParams {
   dias: Date[];             // 7 días de la semana (lunes a domingo)
   operarios: Operario[];    // activos, en orden de aparición
   celdas: CeldaCalendario[];
   obras: Obra[];
   festivos: Festivo[];
+  marcadores?: Marcador[];
 }
 
-export function exportarPlanningSemanalPDF({ dias, operarios, celdas, obras, festivos }: ExportParams) {
+export function exportarPlanningSemanalPDF({ dias, operarios, celdas, obras, festivos, marcadores = [] }: ExportParams) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -89,19 +96,25 @@ export function exportarPlanningSemanalPDF({ dias, operarios, celdas, obras, fes
       content: op.nombre,
       styles: { fontStyle: 'bold', fillColor: [245, 245, 244], textColor: [40, 40, 40], halign: 'left' },
     }];
-    dias.forEach(d => {
+    dias.forEach((d, i) => {
       const fecha = fechaLocal(d);
       const celda = celdas.find(c => c.operarioId === op.id && c.fecha === fecha);
       const estado: EstadoCelda = celda?.estado || 'libre';
-      let text = '';
+      const lineas: string[] = [];
       if (estado === 'trabaja') {
         const cods = celda?.obrasCodigos || (celda?.obraCodigo ? [celda.obraCodigo] : []);
-        text = cods.join('\n');
-      } else {
-        text = LABEL[estado];
+        lineas.push(...cods);
+        if (celda?.nota) lineas.push(celda.nota);
+      } else if (LABEL[estado]) {
+        lineas.push(LABEL[estado]);
+      }
+      // Marcador entre este día y el siguiente (p. ej. Hotel), salvo el último día
+      if (i < 6) {
+        const marca = marcadores.find(m => m.operarioId === op.id && m.fecha === fecha)?.texto;
+        if (marca) lineas.push(`» ${marca}`);
       }
       row.push({
-        content: text,
+        content: lineas.join('\n'),
         styles: { fillColor: FILL[estado], halign: 'center', textColor: [50, 50, 50] },
       });
     });
