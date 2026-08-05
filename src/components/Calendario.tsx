@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Operario, Obra, CeldaCalendario, EstadoCelda, Festivo } from '../types';
 import { useFirestoreState } from '../hooks/useFirestoreState';
 import { esFestivo, esFinDeSemana } from '../utils/capacidad';
+import { exportarPlanningSemanalPDF } from '../utils/exportPdf';
 
 const ESTADOS: EstadoCelda[] = ['trabaja', 'vacaciones', 'baja', 'festivo', 'permiso', 'libre'];
 
@@ -390,6 +391,21 @@ export function Calendario() {
             ▶
           </button>
         </div>
+
+        <button
+          onClick={() => exportarPlanningSemanalPDF({
+            dias: diasSemana,
+            operarios: operariosActivos,
+            celdas,
+            obras,
+            festivos,
+          })}
+          disabled={operariosActivos.length === 0 || diasSemana.length === 0}
+          className="ml-auto bg-brand-500 text-white px-4 py-2 rounded hover:bg-brand-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+          title="Descargar el planning de esta semana en PDF"
+        >
+          <span>📄</span> Exportar PDF
+        </button>
       </div>
 
       {/* Tabla */}
